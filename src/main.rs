@@ -27,7 +27,7 @@ mod errors {
 // This only gives access within this module. Make this `pub use errors::*;`
 // instead if the types must be accessible from other modules (e.g., within
 // a `links` section).
-use errors::*;
+pub use errors::*;
 
 // Use this macro to auto-generate the main. You may want to
 // set the `RUST_BACKTRACE` env variable to see a backtrace.
@@ -38,15 +38,14 @@ quick_main!(run);
 // for which the error type is always our own `Error`.
 fn run() -> Result<()> {
     use std::io;
-    use api::Api;
+    use api::*;
 
     // first line must be a database connection info
     let mut line = String::new();
     io::stdin()
         .read_line(&mut line)
         .chain_err(|| "error reading first line from stdin")?;
-    let info: Api = serde_json::from_str(&line)
-        .chain_err(|| "unable to parse json")?;
+    let _: Api = read_call(&line).chain_err(|| "unable to parse json")?;
     // TODO: test if info is Api::Open {...}
 
     Ok(())
