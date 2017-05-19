@@ -40,8 +40,9 @@ fn run() -> Result<()> {
     use std::io;
     use api::*;
 
-    // first line must be a database connection info
     let mut line = String::new();
+
+    // first line must be a database connection info
     io::stdin()
         .read_line(&mut line)
         .chain_err(|| "error reading first line from stdin")?;
