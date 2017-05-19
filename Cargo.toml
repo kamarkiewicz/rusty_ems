@@ -5,3 +5,6 @@ authors = ["Kamil Markiewicz <k.a.markiewicz@gmail.com>"]
 
 [dependencies]
 error-chain = "0.10.0"
+serde = "1.0.6"
+serde_derive = "1.0.6"
+serde_json = "1.0.2"
