@@ -15,8 +15,13 @@ mod api;
 // this crate will `use errors::*;` to get access to everything
 // `error_chain!` creates.
 mod errors {
+    use super::serde_json;
     // Create the Error, ErrorKind, ResultExt, and Result types
-    error_chain!{}
+    error_chain!{
+        foreign_links {
+            Json(serde_json::Error);
+        }
+    }
 }
 
 // This only gives access within this module. Make this `pub use errors::*;`
@@ -32,11 +37,17 @@ quick_main!(run);
 // `errors` module. It is a typedef of the standard `Result` type
 // for which the error type is always our own `Error`.
 fn run() -> Result<()> {
-    use std::fs::File;
+    use std::io;
+    use api::Api;
 
-    // This operation will fail
-    File::open("tretrete")
-        .chain_err(|| "unable to open tretrete file")?;
+    // first line must be a database connection info
+    let mut line = String::new();
+    io::stdin()
+        .read_line(&mut line)
+        .chain_err(|| "error reading first line from stdin")?;
+    let info: Api = serde_json::from_str(&line)
+        .chain_err(|| "unable to parse json")?;
+    // TODO: test if info is Api::Open {...}
 
     Ok(())
 }
