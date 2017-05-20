@@ -19,6 +19,7 @@ mod errors {
     // Create the Error, ErrorKind, ResultExt, and Result types
     error_chain!{
         foreign_links {
+            Io(::std::io::Error);
             Json(serde_json::Error);
         }
     }
@@ -33,21 +34,41 @@ pub use errors::*;
 // set the `RUST_BACKTRACE` env variable to see a backtrace.
 quick_main!(run);
 
-// Most functions will return the `Result` type, imported from the
-// `errors` module. It is a typedef of the standard `Result` type
-// for which the error type is always our own `Error`.
 fn run() -> Result<()> {
+    use std::io::Write;
+    use std::io::stderr;
+
+    let mut line = String::new();
+    loop {
+        match main_step(&mut line) {
+            Ok(e) => println!("{:?}", e),
+            Err(e) => {
+                println!("JSON ERROR");
+
+                /// following lines should be only in debug mode
+                let stderr = &mut stderr();
+                let errmsg = "Error writing to stderr";
+
+                writeln!(stderr, "error: {}", e).expect(errmsg);
+                for e in e.iter().skip(1) {
+                    writeln!(stderr, "caused by: {}", e).expect(errmsg);
+                }
+                // The backtrace is not always generated. Try to run this example
+                // with `RUST_BACKTRACE=1`.
+                if let Some(backtrace) = e.backtrace() {
+                    writeln!(stderr, "backtrace: {:?}", backtrace).expect(errmsg);
+                }
+            }
+        }
+    }
+}
+
+fn main_step(mut line: &mut String) -> Result<()> {
     use std::io;
     use api::*;
 
-    let mut line = String::new();
-
-    // first line must be a database connection info
-    io::stdin()
-        .read_line(&mut line)
-        .chain_err(|| "error reading first line from stdin")?;
-    let _: Api = read_call(&line).chain_err(|| "unable to parse json")?;
-    // TODO: test if info is Api::Open {...}
+    io::stdin().read_line(&mut line)?;
+    let _: Api = read_call(&line)?;
 
     Ok(())
 }
