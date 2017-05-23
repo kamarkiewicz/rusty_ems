@@ -136,10 +136,18 @@ pub enum Request {
     },
 }
 
+#[derive(Debug, Serialize, PartialEq)]
+#[serde(rename_all = "snake_case")]
+pub enum Response {
+    #[allow(dead_code)]
+    Ok { data: Option<serde_json::Value> },
+    NotImplemented,
+}
+
 static SECRET: &str = "d8578edf8458ce06fbc5bb76a58c5ca4";
 
 pub fn read_call(data: &str) -> Result<Request> {
-    let info: Request = serde_json::from_str(&data)?;
+    let info: Request = serde_json::from_str(data)?;
     match &info {
         &Request::Organizer { ref secret, .. } => {
             if secret != SECRET {

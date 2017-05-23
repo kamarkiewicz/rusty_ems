@@ -11,6 +11,7 @@ extern crate serde;
 extern crate serde_json;
 
 mod api;
+mod router;
 
 // We'll put our errors in an `errors` module, and other modules in
 // this crate will `use errors::*;` to get access to everything
@@ -32,6 +33,8 @@ mod errors {
 // a `links` section).
 pub use errors::*;
 
+use api::*;
+
 // Use this macro to auto-generate the main. You may want to
 // set the `RUST_BACKTRACE` env variable to see a backtrace.
 quick_main!(run);
@@ -51,16 +54,21 @@ fn run() -> Result<()> {
     Ok(())
 }
 
-fn main_step(line: &str) -> Result<()> {
-    use api::*;
-
-    let _: Request = read_call(line)?;
-
-    Ok(())
+fn main_step(line: &str) -> Result<Response> {
+    use router::resolve;
+    let request: Request = read_call(line)?;
+    let response: Response = resolve(request)?;
+    Ok(response)
 }
 
-fn main_ok(e: ()) -> () {
-    println!("{:?}", e);
+fn main_ok(e: Response) -> () {
+    match e {
+        Response::Ok { data } => println!("{:?}", data),
+        Response::NotImplemented => {
+            let not_implemented_json = json!({ "status": "NOT IMPLEMENTED" });
+            println!("{}", not_implemented_json.to_string());
+        }
+    }
 }
 
 fn main_err(e: &Error) -> () {
