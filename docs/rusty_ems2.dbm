@@ -1,0 +1,259 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+CAUTION: Do not modify this file unless you know what you are doing.
+         Unexpected results may occur if the code is changed deliberately.
+-->
+<dbmodel pgmodeler-ver="0.8.2" last-position="0,357" last-zoom="1"
+	 default-schema="public" default-owner="postgres">
+<database name="rusty_ems">
+</database>
+
+<schema name="public" fill-color="#e1e1e1" sql-disabled="true">
+</schema>
+
+<table name="User">
+	<schema name="public"/>
+	<role name="postgres"/>
+	<position x="1000" y="600"/>
+	<column name="user_id" not-null="true">
+		<type name="bigserial"/>
+	</column>
+	<column name="login" not-null="true">
+		<type name="varchar" length="32"/>
+	</column>
+	<column name="password" not-null="true">
+		<type name="text"/>
+	</column>
+	<column name="is_organizer" not-null="true" default-value="false">
+		<type name="boolean"/>
+	</column>
+	<constraint name="user_pk" type="pk-constr" table="public.&quot;User&quot;">
+		<columns names="user_id" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="Event">
+	<schema name="public"/>
+	<role name="postgres"/>
+	<position x="1000" y="980"/>
+	<column name="event_id" not-null="true">
+		<type name="bigint"/>
+	</column>
+	<column name="eventname" not-null="true">
+		<type name="text"/>
+	</column>
+	<column name="start_timestamp" not-null="true">
+		<type name="timestamp"/>
+	</column>
+	<column name="end_timestamp" not-null="true">
+		<type name="timestamp"/>
+	</column>
+	<constraint name="event_pk" type="pk-constr" table="public.&quot;Event&quot;">
+		<columns names="event_id" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="Talk">
+	<schema name="public"/>
+	<role name="postgres"/>
+	<position x="240" y="780"/>
+	<column name="talk_id" not-null="true">
+		<type name="text"/>
+	</column>
+	<column name="status" not-null="true">
+		<type name="smallint"/>
+	</column>
+	<column name="title" not-null="true">
+		<type name="text"/>
+	</column>
+	<column name="start_timestamp" not-null="true">
+		<type name="timestamp"/>
+	</column>
+	<column name="add_timestamp" not-null="true" default-value="now()">
+		<type name="timestamp"/>
+	</column>
+	<constraint name="talk_pk" type="pk-constr" table="public.&quot;Talk&quot;">
+		<columns names="talk_id" ref-type="src-columns"/>
+	</constraint>
+
+	<customidxs object-type="column">
+		<object name="event_id_Event" index="4"/>
+		<object name="user_id_User" index="3"/>
+	</customidxs>
+
+	<customidxs object-type="constraint">
+		<object name="Event_fk" index="1"/>
+		<object name="User_fk" index="2"/>
+	</customidxs>
+</table>
+
+<table name="User_friend_of_User">
+	<schema name="public"/>
+	<role name="postgres"/>
+	<position x="1260" y="420"/>
+	<column name="user1_id" not-null="true">
+		<type name="bigint"/>
+	</column>
+	<column name="user2_id" not-null="true">
+		<type name="bigint"/>
+	</column>
+	<constraint name="User_friend_of_User_pk" type="pk-constr" table="public.&quot;User_friend_of_User&quot;">
+		<columns names="user1_id,user2_id" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<table name="User_attended_for_Talk">
+	<schema name="public"/>
+	<position x="320" y="440"/>
+	<column name="present" not-null="true" default-value="false">
+		<type name="boolean"/>
+	</column>
+	<column name="rating">
+		<type name="smallint"/>
+	</column>
+
+	<customidxs object-type="column">
+		<object name="talk_id_Talk" index="1"/>
+		<object name="user_id_User" index="0"/>
+	</customidxs>
+
+	<customidxs object-type="constraint">
+		<object name="Talk_fk" index="2"/>
+		<object name="User_attended_for_Talk_pk" index="0"/>
+		<object name="User_fk" index="1"/>
+	</customidxs>
+</table>
+
+<relationship name="User_has_many_User_attended_for_Talks" type="rel1n"
+	 src-col-pattern="{sc}_{st}"
+	 pk-pattern="{dt}_pk" uq-pattern="{dt}_uq"
+	 src-fk-pattern="{st}_fk"
+	 src-table="public.&quot;User&quot;"
+	 dst-table="public.&quot;User_attended_for_Talk&quot;"
+	 src-required="true" dst-required="false"
+	 identifier="true"
+>
+	<label ref-type="name-label">
+		<position x="0" y="0"/>
+	</label>
+</relationship>
+
+<relationship name="Talk_has_many_User_attendedFor_Talk" type="rel1n"
+	 src-col-pattern="{sc}_{st}"
+	 pk-pattern="{dt}_pk" uq-pattern="{dt}_uq"
+	 src-fk-pattern="{st}_fk"
+	 src-table="public.&quot;Talk&quot;"
+	 dst-table="public.&quot;User_attended_for_Talk&quot;"
+	 src-required="true" dst-required="false"
+	 identifier="true"
+>
+	<line>
+		<position x="220" y="500"/>
+	</line>
+</relationship>
+
+<relationship name="Event_has_many_Talks" type="rel1n"
+	 src-col-pattern="{sc}_{st}"
+	 pk-pattern="{dt}_pk" uq-pattern="{dt}_uq"
+	 src-fk-pattern="{st}_fk"
+	 custom-color="#2d8e63"
+	 src-table="public.&quot;Event&quot;"
+	 dst-table="public.&quot;Talk&quot;"
+	 src-required="false" dst-required="false">
+	<line>
+		<position x="760" y="860"/>
+	<position x="600" y="860"/>
+	</line>
+</relationship>
+
+<relationship name="User_is_speaker_for_many_Talks" type="rel1n"
+	 src-col-pattern="{sc}_{st}"
+	 pk-pattern="{dt}_pk" uq-pattern="{dt}_uq"
+	 src-fk-pattern="{st}_fk"
+	 custom-color="#908886"
+	 src-table="public.&quot;User&quot;"
+	 dst-table="public.&quot;Talk&quot;"
+	 src-required="false" dst-required="false">
+	<line>
+		<position x="840" y="780"/>
+	<position x="660" y="780"/>
+	</line>
+	<label ref-type="name-label">
+		<position x="0" y="0"/>
+	</label>
+</relationship>
+
+<table name="User_registered_for_Event">
+	<schema name="public"/>
+	<position x="980" y="780"/>
+</table>
+
+<relationship name="User_has_many_User_registered_for_Event" type="rel1n"
+	 src-col-pattern="{sc}_{st}"
+	 pk-pattern="{dt}_pk" uq-pattern="{dt}_uq"
+	 src-fk-pattern="{st}_fk"
+	 src-table="public.&quot;User&quot;"
+	 dst-table="public.&quot;User_registered_for_Event&quot;"
+	 src-required="true" dst-required="false"
+	 identifier="true"
+>
+	<label ref-type="src-label">
+		<position x="9.80687" y="39.8"/>
+	</label>
+	<label ref-type="name-label">
+		<position x="0" y="0"/>
+	</label>
+</relationship>
+
+<relationship name="Event_has_many_User_registered_for_Event" type="rel1n"
+	 src-col-pattern="{sc}_{st}"
+	 pk-pattern="{dt}_pk" uq-pattern="{dt}_uq"
+	 src-fk-pattern="{st}_fk"
+	 src-table="public.&quot;Event&quot;"
+	 dst-table="public.&quot;User_registered_for_Event&quot;"
+	 src-required="true" dst-required="false"
+	 identifier="true"
+>
+	<line>
+		<position x="1260" y="840"/>
+	</line>
+</relationship>
+
+<textbox name="podpis" font-size="9">
+	<position x="700" y="400"/>
+	<comment><![CDATA[Kamil Markiewicz, nr indeksu 264407]]></comment>
+</textbox>
+
+<textbox name="status type" font-size="9">
+	<position x="180" y="920"/>
+	<comment><![CDATA[status może przyjąć jedną z 3 wartości:
+proposed
+accepted
+rejected]]></comment>
+</textbox>
+
+<constraint name="user1_friend_of_user2" type="fk-constr" comparison-type="MATCH FULL"
+	 upd-action="NO ACTION" del-action="NO ACTION" ref-table="public.&quot;User&quot;" table="public.&quot;User_friend_of_User&quot;">
+	<columns names="user1_id" ref-type="src-columns"/>
+	<columns names="user_id" ref-type="dst-columns"/>
+</constraint>
+
+<constraint name="user2_friend_of_user1" type="fk-constr" comparison-type="MATCH FULL"
+	 upd-action="NO ACTION" del-action="NO ACTION" ref-table="public.&quot;User&quot;" table="public.&quot;User_friend_of_User&quot;">
+	<columns names="user2_id" ref-type="src-columns"/>
+	<columns names="user_id" ref-type="dst-columns"/>
+</constraint>
+
+<relationship name="User1_is_friend_of_User2" type="relfk"
+	 src-table="public.&quot;User_friend_of_User&quot;"
+	 dst-table="public.&quot;User&quot;"
+	 src-required="false" dst-required="false">
+	<label ref-type="dst-label">
+		<position x="9.33687" y="-20.2"/>
+	</label>
+	<label ref-type="name-label">
+		<position x="0" y="0"/>
+	</label>
+</relationship>
+
+</dbmodel>
