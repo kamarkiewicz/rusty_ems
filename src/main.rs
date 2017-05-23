@@ -7,6 +7,7 @@ extern crate error_chain;
 extern crate serde_derive;
 
 extern crate serde;
+#[macro_use]
 extern crate serde_json;
 
 mod api;
@@ -65,7 +66,8 @@ fn main_ok(e: ()) -> () {
 fn main_err(e: &Error) -> () {
     use std::io::{stderr, Write};
 
-    println!("JSON ERROR");
+    let error_json = json!({ "status": "ERROR" });
+    println!("{}", error_json.to_string());
 
     /// following lines should be only in debug mode
     let stderr = &mut stderr();
