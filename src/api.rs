@@ -3,7 +3,7 @@ use serde_json;
 
 #[derive(Debug, Deserialize, PartialEq)]
 #[serde(rename_all = "snake_case")]
-pub enum Api {
+pub enum Request {
     Open {
         baza: String,
         login: String,
@@ -138,10 +138,10 @@ pub enum Api {
 
 static SECRET: &str = "d8578edf8458ce06fbc5bb76a58c5ca4";
 
-pub fn read_call(data: &str) -> Result<Api> {
-    let info: Api = serde_json::from_str(&data)?;
+pub fn read_call(data: &str) -> Result<Request> {
+    let info: Request = serde_json::from_str(&data)?;
     match &info {
-        &Api::Organizer { ref secret, .. } => {
+        &Request::Organizer { ref secret, .. } => {
             if secret != SECRET {
                 bail!("invalid secret")
             }
@@ -155,15 +155,15 @@ pub fn read_call(data: &str) -> Result<Api> {
 #[cfg(test)]
 mod tests {
     use errors::*;
-    use super::{Api, read_call, SECRET};
+    use super::{Request, read_call, SECRET};
 
     #[test]
     fn deserialize_connection_info() {
         let data =
             r#"{ "open": { "baza": "stud", "login": "stud", "password": "d8578edf8458ce06fbc"}}"#;
-        let info: Api = read_call(&data).unwrap();
+        let info: Request = read_call(&data).unwrap();
         assert!(info ==
-                Api::Open {
+                Request::Open {
                     baza: "stud".to_owned(),
                     login: "stud".to_owned(),
                     password: "d8578edf8458ce06fbc".to_owned(),
@@ -175,9 +175,9 @@ mod tests {
         let mut data = r#"{ "organizer": { "secret": ""#.to_owned();
         data += SECRET;
         data += r#"", "newlogin": "organizer", "newpassword": "d8578edf8458ce06fbc"}}"#;
-        let info: Api = read_call(&data).unwrap();
+        let info: Request = read_call(&data).unwrap();
         assert!(info ==
-                Api::Organizer {
+                Request::Organizer {
                     secret: SECRET.to_owned(),
                     newlogin: "organizer".to_owned(),
                     newpassword: "d8578edf8458ce06fbc".to_owned(),
@@ -189,9 +189,9 @@ mod tests {
         let data =
             r#"{ "most_popular_talks": {
             "start_timestamp": "2017-06-05", "end_timestamp": "2017-06-14", "limit": "42"}}"#;
-        let info: Api = read_call(&data).unwrap();
+        let info: Request = read_call(&data).unwrap();
         assert!(info ==
-                Api::MostPopularTalks {
+                Request::MostPopularTalks {
                     start_timestamp: "2017-06-05".to_owned(),
                     end_timestamp: "2017-06-14".to_owned(),
                     limit: "42".to_owned(),

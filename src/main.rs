@@ -15,11 +15,12 @@ mod api;
 // this crate will `use errors::*;` to get access to everything
 // `error_chain!` creates.
 mod errors {
+    use super::std::io;
     use super::serde_json;
     // Create the Error, ErrorKind, ResultExt, and Result types
     error_chain!{
         foreign_links {
-            Io(::std::io::Error);
+            Io(io::Error);
             Json(serde_json::Error);
         }
     }
@@ -35,40 +36,48 @@ pub use errors::*;
 quick_main!(run);
 
 fn run() -> Result<()> {
-    use std::io::Write;
-    use std::io::stderr;
+    use std::io;
+    use std::io::BufRead;
 
-    let mut line = String::new();
-    loop {
-        match main_step(&mut line) {
-            Ok(e) => println!("{:?}", e),
-            Err(e) => {
-                println!("JSON ERROR");
-
-                /// following lines should be only in debug mode
-                let stderr = &mut stderr();
-                let errmsg = "Error writing to stderr";
-
-                writeln!(stderr, "error: {}", e).expect(errmsg);
-                for e in e.iter().skip(1) {
-                    writeln!(stderr, "caused by: {}", e).expect(errmsg);
-                }
-                // The backtrace is not always generated. Try to run this example
-                // with `RUST_BACKTRACE=1`.
-                if let Some(backtrace) = e.backtrace() {
-                    writeln!(stderr, "backtrace: {:?}", backtrace).expect(errmsg);
-                }
-            }
+    let stdin = io::stdin();
+    for line in stdin.lock().lines() {
+        match main_step(&line?) {
+            Ok(e) => main_ok(e),
+            Err(e) => main_err(&e),
         }
     }
-}
-
-fn main_step(mut line: &mut String) -> Result<()> {
-    use std::io;
-    use api::*;
-
-    io::stdin().read_line(&mut line)?;
-    let _: Api = read_call(&line)?;
 
     Ok(())
+}
+
+fn main_step(line: &str) -> Result<()> {
+    use api::*;
+
+    let _: Request = read_call(line)?;
+
+    Ok(())
+}
+
+fn main_ok(e: ()) -> () {
+    println!("{:?}", e);
+}
+
+fn main_err(e: &Error) -> () {
+    use std::io::{stderr, Write};
+
+    println!("JSON ERROR");
+
+    /// following lines should be only in debug mode
+    let stderr = &mut stderr();
+    let errmsg = "Error writing to stderr";
+
+    writeln!(stderr, "error: {}", e).expect(errmsg);
+    for e in e.iter().skip(1) {
+        writeln!(stderr, "caused by: {}", e).expect(errmsg);
+    }
+    // The backtrace is not always generated. Try to run this example
+    // with `RUST_BACKTRACE=1`.
+    if let Some(backtrace) = e.backtrace() {
+        writeln!(stderr, "backtrace: {:?}", backtrace).expect(errmsg);
+    }
 }
