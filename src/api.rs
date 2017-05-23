@@ -136,11 +136,9 @@ pub enum Request {
     },
 }
 
-#[derive(Debug, Serialize, PartialEq)]
-#[serde(rename_all = "snake_case")]
 pub enum Response {
     #[allow(dead_code)]
-    Ok { data: Option<serde_json::Value> },
+    Ok(Option<String>),
     NotImplemented,
 }
 

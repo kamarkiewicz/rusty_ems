@@ -62,13 +62,21 @@ fn main_step(line: &str) -> Result<Response> {
 }
 
 fn main_ok(e: Response) -> () {
-    match e {
-        Response::Ok { data } => println!("{:?}", data),
+    let response_json = match e {
+        Response::Ok(Some(data_json)) => {
+            let ok_json = json!({ "status": "OK", "data": data_json });
+            ok_json.to_string()
+        }
+        Response::Ok(None) => {
+            let ok_json = json!({ "status": "OK" });
+            ok_json.to_string()
+        }
         Response::NotImplemented => {
             let not_implemented_json = json!({ "status": "NOT IMPLEMENTED" });
-            println!("{}", not_implemented_json.to_string());
+            not_implemented_json.to_string()
         }
-    }
+    };
+    println!("{}", response_json);
 }
 
 fn main_err(e: &Error) -> () {
