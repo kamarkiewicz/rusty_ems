@@ -14,6 +14,7 @@ extern crate serde_json;
 extern crate diesel;
 
 mod api;
+mod database;
 mod router;
 
 // We'll put our errors in an `errors` module, and other modules in
@@ -37,6 +38,7 @@ mod errors {
 pub use errors::*;
 
 use api::*;
+use router::Context;
 
 // Use this macro to auto-generate the main. You may want to
 // set the `RUST_BACKTRACE` env variable to see a backtrace.
@@ -47,8 +49,9 @@ fn run() -> Result<()> {
     use std::io::BufRead;
 
     let stdin = io::stdin();
+    let mut ctxt: Context = Context::new();
     for line in stdin.lock().lines() {
-        match main_step(&line?) {
+        match main_step(&mut ctxt, &line?) {
             Ok(e) => main_ok(e),
             Err(e) => main_err(&e),
         }
@@ -57,10 +60,9 @@ fn run() -> Result<()> {
     Ok(())
 }
 
-fn main_step(line: &str) -> Result<Response> {
-    use router::resolve;
+fn main_step(ctxt: &mut Context, line: &str) -> Result<Response> {
     let request: Request = read_call(line)?;
-    let response: Response = resolve(request)?;
+    let response: Response = ctxt.resolve(request)?;
     Ok(response)
 }
 

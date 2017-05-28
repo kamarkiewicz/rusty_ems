@@ -1,8 +1,27 @@
 use errors::*;
 use api::*;
+use database::*;
 
-pub fn resolve(req: Request) -> Result<Response> {
-    let _ = req;
+pub struct Context {
+    conn: Option<PgConnection>,
+}
 
-    Ok(Response::NotImplemented)
+impl Context {
+    pub fn new() -> Context {
+        Context { conn: None }
+    }
+
+    pub fn resolve(&mut self, req: Request) -> Result<Response> {
+        Ok(match req {
+               Request::Open {
+                   login,
+                   password,
+                   baza,
+               } => {
+                   self.conn = Some(establish_connection(login, password, baza)?);
+                   Response::Ok(None)
+               }
+               _ => Response::NotImplemented,
+           })
+    }
 }
