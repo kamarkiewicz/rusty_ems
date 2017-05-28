@@ -20,6 +20,15 @@ impl Context {
                } => {
                    self.conn = Some(establish_connection(login, password, baza)?);
                    Response::Ok(None)
+               },
+               Request::Organizer {
+                   newlogin,
+                   newpassword,
+                   .. // secret has been validated on Request creation
+               } => {
+                   let conn = self.conn.as_ref().ok_or("")?;
+                    create_organizer_account(&conn, newlogin, newpassword)?;
+                    Response::Ok(None)
                }
                _ => Response::NotImplemented,
            })

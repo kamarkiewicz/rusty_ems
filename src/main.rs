@@ -3,17 +3,20 @@
 
 #[macro_use]
 extern crate error_chain;
-#[macro_use]
-extern crate serde_derive;
 
 extern crate serde;
+#[macro_use]
+extern crate serde_derive;
 #[macro_use]
 extern crate serde_json;
 
 #[macro_use]
 extern crate diesel;
+#[macro_use]
+extern crate diesel_codegen;
 
 mod api;
+mod schema;
 mod database;
 mod router;
 
