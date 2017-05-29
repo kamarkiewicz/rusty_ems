@@ -3,7 +3,7 @@
 CAUTION: Do not modify this file unless you know what you are doing.
          Unexpected results may occur if the code is changed deliberately.
 -->
-<dbmodel pgmodeler-ver="0.8.2" last-position="0,307" last-zoom="1"
+<dbmodel pgmodeler-ver="0.8.2" last-position="0,357" last-zoom="1"
 	 default-schema="public" default-owner="postgres">
 <database name="rusty_ems">
 </database>
@@ -60,6 +60,9 @@ CAUTION: Do not modify this file unless you know what you are doing.
 	<column name="talk_id" not-null="true">
 		<type name="text"/>
 	</column>
+	<column name="status" not-null="true">
+		<type name="smallint"/>
+	</column>
 	<column name="title" not-null="true">
 		<type name="text"/>
 	</column>
@@ -74,8 +77,8 @@ CAUTION: Do not modify this file unless you know what you are doing.
 	</constraint>
 
 	<customidxs object-type="column">
-		<object name="event_id_Event" index="2"/>
-		<object name="user_id_User" index="1"/>
+		<object name="event_id_Event" index="4"/>
+		<object name="user_id_User" index="3"/>
 	</customidxs>
 
 	<customidxs object-type="constraint">
@@ -97,12 +100,6 @@ CAUTION: Do not modify this file unless you know what you are doing.
 	<constraint name="User_friend_of_User_pk" type="pk-constr" table="public.&quot;User_friend_of_User&quot;">
 		<columns names="user1_id,user2_id" ref-type="src-columns"/>
 	</constraint>
-</table>
-
-<table name="RejectedTalk">
-	<schema name="public"/>
-	<role name="postgres"/>
-	<position x="100" y="100"/>
 </table>
 
 <table name="User_attended_for_Talk">
@@ -222,21 +219,17 @@ CAUTION: Do not modify this file unless you know what you are doing.
 	</line>
 </relationship>
 
-<table name="ProposalTalk">
-	<schema name="public"/>
-	<role name="postgres"/>
-	<position x="300" y="100"/>
-</table>
-
-<table name="AcceptedTalk">
-	<schema name="public"/>
-	<role name="postgres"/>
-	<position x="540" y="100"/>
-</table>
-
 <textbox name="podpis" font-size="9">
 	<position x="700" y="400"/>
 	<comment><![CDATA[Kamil Markiewicz, nr indeksu 264407]]></comment>
+</textbox>
+
+<textbox name="status type" font-size="9">
+	<position x="180" y="920"/>
+	<comment><![CDATA[status może przyjąć jedną z 3 wartości:
+proposed
+accepted
+rejected]]></comment>
 </textbox>
 
 <constraint name="user1_friend_of_user2" type="fk-constr" comparison-type="MATCH FULL"

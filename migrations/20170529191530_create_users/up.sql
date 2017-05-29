@@ -1,6 +1,6 @@
 CREATE TABLE users (
-  id SERIAL PRIMARY KEY,
-  login VARCHAR NOT NULL UNIQUE,
-  password VARCHAR NOT NULL,
-  is_organizer BOOLEAN NOT NULL DEFAULT FALSE
+  id serial PRIMARY KEY,
+  login varchar NOT NULL UNIQUE,
+  password varchar NOT NULL,
+  is_organizer boolean NOT NULL DEFAULT false
 );
