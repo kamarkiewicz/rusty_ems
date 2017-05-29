@@ -17,6 +17,7 @@ extern crate diesel_codegen;
 
 mod api;
 mod schema;
+mod models;
 mod database;
 mod router;
 
