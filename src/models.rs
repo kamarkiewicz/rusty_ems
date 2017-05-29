@@ -2,7 +2,7 @@ use schema::*;
 
 #[derive(Queryable)]
 pub struct User {
-    pub id: i64,
+    pub id: i32,
     pub login: String,
     pub password: String,
     pub is_organizer: bool,

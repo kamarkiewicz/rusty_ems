@@ -16,14 +16,15 @@ pub fn create_organizer_account(conn: &PgConnection,
                                 -> Result<()> {
     use schema::users;
     use models::{User, NewUser};
-    
-    let organizer = NewUser { 
+
+    let organizer = NewUser {
         login: newlogin.as_ref(),
         password: newpassword.as_ref(),
         is_organizer: true,
-     };
+    };
 
-    diesel::insert(&organizer).into(users::table)
+    diesel::insert(&organizer)
+        .into(users::table)
         .get_result::<User>(conn)
         .chain_err(|| "unable to add organizer user to database")?;
 
