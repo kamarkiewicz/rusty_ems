@@ -1,7 +1,7 @@
 use schema::*;
 
 #[derive(Queryable)]
-pub struct User {
+pub struct Person {
     pub id: i32,
     pub login: String,
     pub password: String,
@@ -9,8 +9,8 @@ pub struct User {
 }
 
 #[derive(Insertable)]
-#[table_name="users"]
-pub struct NewUser<'a> {
+#[table_name="person"]
+pub struct NewPerson<'a> {
     pub login: &'a str,
     pub password: &'a str,
     pub is_organizer: bool,
