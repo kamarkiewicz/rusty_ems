@@ -26,7 +26,7 @@ impl Context {
                    newpassword,
                    .. // secret has been validated on Request creation
                } => {
-                   let conn = self.conn.as_ref().ok_or("")?;
+                   let conn = self.conn.as_ref().ok_or("establish connection first")?;
                     create_organizer_account(&conn, newlogin, newpassword)?;
                     Response::Ok(None)
                }
