@@ -1,6 +1,8 @@
 // `error_chain!` can recurse deeply
 #![recursion_limit = "1024"]
 
+extern crate chrono;
+
 #[macro_use]
 extern crate error_chain;
 

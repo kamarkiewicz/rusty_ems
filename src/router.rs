@@ -29,6 +29,18 @@ impl Context {
                    let conn = self.conn.as_ref().ok_or("establish connection first")?;
                     create_organizer_account(&conn, newlogin, newpassword)?;
                     Response::Ok(None)
+               },
+               Request::Event {
+                   login,
+                   password,
+                   eventname,
+                   start_timestamp,
+                   end_timestamp
+               } => {
+                   let conn = self.conn.as_ref().ok_or("establish connection first")?;
+                   //let person = authorize_person(&conn, login, password, PersonAs::Organizer)?;
+                   //create_event(&conn, eventname, start_timestamp, end_timestamp)?;
+                   Response::Ok(None)
                }
                _ => Response::NotImplemented,
            })

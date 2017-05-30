@@ -30,3 +30,6 @@ pub fn create_organizer_account(conn: &PgConnection,
 
     Ok(())
 }
+
+// pub fn create_event(conn: &PgConnection,
+//                     )
