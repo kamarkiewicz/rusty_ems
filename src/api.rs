@@ -1,5 +1,6 @@
 use errors::*;
 use serde_json;
+pub use chrono::NaiveDateTime as Timestamp;
 
 #[derive(Debug, Deserialize, PartialEq)]
 #[serde(rename_all = "snake_case")]
@@ -20,8 +21,8 @@ pub enum Request {
         login: String,
         password: String,
         eventname: String,
-        start_timestamp: String,
-        end_timestamp: String,
+        start_timestamp: Timestamp,
+        end_timestamp: Timestamp,
     },
 
     User {
@@ -37,7 +38,7 @@ pub enum Request {
         speakerlogin: String,
         talk: String,
         title: String,
-        start_timestamp: String,
+        start_timestamp: Timestamp,
         room: String,
         initial_evaluation: String,
         eventname: String,
@@ -73,7 +74,7 @@ pub enum Request {
         password: String,
         talk: String,
         title: String,
-        start_timestamp: String,
+        start_timestamp: Timestamp,
     },
 
     Friends {
@@ -87,15 +88,15 @@ pub enum Request {
     DayPlan { timestamp: String },
 
     BestTalks {
-        start_timestamp: String,
-        end_timestamp: String,
+        start_timestamp: Timestamp,
+        end_timestamp: Timestamp,
         limit: String,
         all: String,
     },
 
     MostPopularTalks {
-        start_timestamp: String,
-        end_timestamp: String,
+        start_timestamp: Timestamp,
+        end_timestamp: Timestamp,
         limit: String,
     },
 
@@ -116,8 +117,8 @@ pub enum Request {
     FriendsTalks {
         login: String,
         password: String,
-        start_timestamp: String,
-        end_timestamp: String,
+        start_timestamp: Timestamp,
+        end_timestamp: Timestamp,
         limit: String,
     },
 
@@ -130,8 +131,8 @@ pub enum Request {
     RecommendedTalks {
         login: String,
         password: String,
-        start_timestamp: String,
-        end_timestamp: String,
+        start_timestamp: Timestamp,
+        end_timestamp: Timestamp,
         limit: String,
     },
 }

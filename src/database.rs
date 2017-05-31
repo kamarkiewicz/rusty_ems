@@ -1,8 +1,10 @@
 use errors::*;
+// use models::*;
 
 use diesel;
 use diesel::prelude::*;
 pub use diesel::pg::PgConnection;
+use super::api::Timestamp;
 
 pub fn establish_connection(login: String, password: String, baza: String) -> Result<PgConnection> {
     let database_url = format!("postgres://{}:{}@localhost/{}", login, password, baza);
@@ -31,5 +33,18 @@ pub fn create_organizer_account(conn: &PgConnection,
     Ok(())
 }
 
-// pub fn create_event(conn: &PgConnection,
-//                     )
+pub fn create_event(conn: &PgConnection,
+                    login: String,
+                    password: String,
+                    eventname: String,
+                    start_timestamp: Timestamp,
+                    end_timestamp: Timestamp)
+                    -> Result<()> {
+    use schema::person;
+    use models::{Person, Event, NewEvent};
+
+    // TODO: authorize person as organizer
+    // TODO: insert new event
+
+    Ok(())
+}

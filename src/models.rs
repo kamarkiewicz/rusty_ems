@@ -1,6 +1,5 @@
 use schema::*;
-use chrono::NaiveDateTime;
-use diesel::types::Timestamp;
+use api::Timestamp;
 
 #[derive(Queryable)]
 pub struct Person {
@@ -30,6 +29,6 @@ pub struct Event {
 #[table_name="event"]
 pub struct NewEvent<'a> {
     pub eventname: &'a str,
-    pub start_timestamp: NaiveDateTime,
-    pub end_timestamp: NaiveDateTime,
+    pub start_timestamp: Timestamp,
+    pub end_timestamp: Timestamp,
 }
