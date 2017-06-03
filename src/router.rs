@@ -40,7 +40,7 @@ impl Context {
                    end_timestamp
                } => {
                    let conn = self.conn.as_ref().ok_or("establish connection first")?;
-                   //let person = authorize_person(&conn, login, password, PersonAs::Organizer)?;
+                   //let person = authorize_person(&conn, login, password)?;
                    create_event(&conn, login, password,
                         eventname, start_timestamp, end_timestamp)?;
                    Response::Ok(None)

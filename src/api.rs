@@ -1,6 +1,41 @@
 use errors::*;
 use serde_json;
-pub use chrono::NaiveDateTime as Timestamp;
+
+pub use self::timestamp_fmt::Timestamp;
+
+/// Timestamp formatter used by Serde. Supports ISO 8601
+/// https://www.postgresql.org/docs/current/static/datatype-datetime.html
+mod timestamp_fmt {
+    pub use chrono::NaiveDateTime as Timestamp;
+    use serde::{self, Deserialize, Serializer, Deserializer};
+
+    const FORMAT: &'static str = "%Y-%m-%d %H:%M:%S";
+
+    // The signature of a serialize_with function must follow the pattern:
+    //
+    //    fn serialize<S>(&T, S) -> Result<S::Ok, S::Error> where S: Serializer
+    //
+    // although it may also be generic over the input types T.
+    pub fn serialize<S>(date: &Timestamp, serializer: S) -> Result<S::Ok, S::Error>
+        where S: Serializer
+    {
+        let s = format!("{}", date.format(FORMAT));
+        serializer.serialize_str(&s)
+    }
+
+    // The signature of a deserialize_with function must follow the pattern:
+    //
+    //    fn deserialize<D>(D) -> Result<T, D::Error> where D: Deserializer
+    //
+    // although it may also be generic over the output types T.
+    pub fn deserialize<'de, D>(deserializer: D) -> Result<Timestamp, D::Error>
+        where D: Deserializer<'de>
+    {
+        let s = String::deserialize(deserializer)?;
+        Timestamp::parse_from_str(&s, FORMAT).map_err(serde::de::Error::custom)
+    }
+}
+
 
 #[derive(Debug, Deserialize, PartialEq)]
 #[serde(rename_all = "snake_case")]
@@ -21,7 +56,9 @@ pub enum Request {
         login: String,
         password: String,
         eventname: String,
+        #[serde(with = "timestamp_fmt")]
         start_timestamp: Timestamp,
+        #[serde(with = "timestamp_fmt")]
         end_timestamp: Timestamp,
     },
 
@@ -38,6 +75,7 @@ pub enum Request {
         speakerlogin: String,
         talk: String,
         title: String,
+        #[serde(with = "timestamp_fmt")]
         start_timestamp: Timestamp,
         room: String,
         initial_evaluation: String,
@@ -74,6 +112,7 @@ pub enum Request {
         password: String,
         talk: String,
         title: String,
+        #[serde(with = "timestamp_fmt")]
         start_timestamp: Timestamp,
     },
 
@@ -85,17 +124,24 @@ pub enum Request {
 
     UserPlan { login: String, limit: String },
 
-    DayPlan { timestamp: String },
+    DayPlan {
+        #[serde(with = "timestamp_fmt")]
+        timestamp: Timestamp,
+    },
 
     BestTalks {
+        #[serde(with = "timestamp_fmt")]
         start_timestamp: Timestamp,
+        #[serde(with = "timestamp_fmt")]
         end_timestamp: Timestamp,
         limit: String,
         all: String,
     },
 
     MostPopularTalks {
+        #[serde(with = "timestamp_fmt")]
         start_timestamp: Timestamp,
+        #[serde(with = "timestamp_fmt")]
         end_timestamp: Timestamp,
         limit: String,
     },
@@ -117,7 +163,9 @@ pub enum Request {
     FriendsTalks {
         login: String,
         password: String,
+        #[serde(with = "timestamp_fmt")]
         start_timestamp: Timestamp,
+        #[serde(with = "timestamp_fmt")]
         end_timestamp: Timestamp,
         limit: String,
     },
@@ -131,7 +179,9 @@ pub enum Request {
     RecommendedTalks {
         login: String,
         password: String,
+        #[serde(with = "timestamp_fmt")]
         start_timestamp: Timestamp,
+        #[serde(with = "timestamp_fmt")]
         end_timestamp: Timestamp,
         limit: String,
     },
@@ -161,8 +211,7 @@ pub fn read_call(data: &str) -> Result<Request> {
 
 #[cfg(test)]
 mod tests {
-    use errors::*;
-    use super::{Request, read_call, SECRET};
+    use super::*;
 
     #[test]
     fn deserialize_connection_info() {
@@ -193,14 +242,18 @@ mod tests {
 
     #[test]
     fn deserialize_snake_case() {
-        let data =
-            r#"{ "most_popular_talks": {
-            "start_timestamp": "2017-06-05", "end_timestamp": "2017-06-14", "limit": "42"}}"#;
+        let data = r#"{ "most_popular_talks": {
+            "start_timestamp": "2015-09-05 23:56:04",
+            "end_timestamp": "2015-09-05 23:56:04",
+            "limit": "42"}}"#;
         let info: Request = read_call(&data).unwrap();
+
+        let common_timestamp =
+            Timestamp::parse_from_str("2015-09-05 23:56:04", "%Y-%m-%d %H:%M:%S").unwrap();
         assert!(info ==
                 Request::MostPopularTalks {
-                    start_timestamp: "2017-06-05".to_owned(),
-                    end_timestamp: "2017-06-14".to_owned(),
+                    start_timestamp: common_timestamp,
+                    end_timestamp: common_timestamp,
                     limit: "42".to_owned(),
                 });
     }
