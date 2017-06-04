@@ -16,6 +16,7 @@ mod timestamp_fmt {
     //    fn serialize<S>(&T, S) -> Result<S::Ok, S::Error> where S: Serializer
     //
     // although it may also be generic over the input types T.
+    #[allow(dead_code)]
     pub fn serialize<S>(date: &Timestamp, serializer: S) -> Result<S::Ok, S::Error>
         where S: Serializer
     {

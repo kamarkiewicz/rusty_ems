@@ -6,6 +6,8 @@ pub struct Context {
     conn: Option<PgConnection>,
 }
 
+#[allow(unused_variables)]
+#[allow(unused_imports)]
 impl Context {
     pub fn new() -> Context {
         Context { conn: None }
