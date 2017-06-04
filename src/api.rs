@@ -249,8 +249,9 @@ mod tests {
             "limit": "42"}}"#;
         let info: Request = read_call(&data).expect("json input needs a fix");
 
-        let common_timestamp =
-            Timestamp::parse_from_str("2015-09-05 23:56:04", "%Y-%m-%d %H:%M:%S").expect("not a timestamp");
+        let common_timestamp = Timestamp::parse_from_str("2015-09-05 23:56:04",
+                                                         "%Y-%m-%d %H:%M:%S")
+                .expect("not a timestamp");
         assert!(info ==
                 Request::MostPopularTalks {
                     start_timestamp: common_timestamp,
@@ -269,5 +270,25 @@ mod tests {
             Error(ErrorKind::Msg(msg), ..) => assert!(msg == "invalid secret"),
             _ => assert!(false),
         }
+    }
+
+    #[test]
+    fn deserialize_event_tests_timestamps() {
+        let data = r#"{"event": {"login": "Donald_Grump11", "password": "admin",
+                       "eventname": "Konwent",
+                       "start_timestamp": "2016-01-20 10:00:00",
+                       "end_timestamp": "2016-02-01 18:00:00"}}"#;
+        let info: Request = read_call(&data).expect("json input needs a fix");
+
+        let start_timestamp = parse_from_str("2016-01-20 10:00:00", "%Y-%m-%d %H:%M:%S").unwrap();
+        let end_timestamp = parse_from_str("2016-02-01 18:00:00", "%Y-%m-%d %H:%M:%S").unwrap();
+        assert!(info ==
+                Request::Event {
+                    login: "Donald_Grump11".to_owned(),
+                    password: "admin".to_owned(),
+                    eventname: "Konwent".to_owned(),
+                    start_timestamp: start_timestamp,
+                    end_timestamp: end_timestamp,
+                });
     }
 }
