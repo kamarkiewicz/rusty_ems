@@ -247,10 +247,10 @@ mod tests {
             "start_timestamp": "2015-09-05 23:56:04",
             "end_timestamp": "2015-09-05 23:56:04",
             "limit": "42"}}"#;
-        let info: Request = read_call(&data).unwrap();
+        let info: Request = read_call(&data).expect("json input needs a fix");
 
         let common_timestamp =
-            Timestamp::parse_from_str("2015-09-05 23:56:04", "%Y-%m-%d %H:%M:%S").unwrap();
+            Timestamp::parse_from_str("2015-09-05 23:56:04", "%Y-%m-%d %H:%M:%S").expect("not a timestamp");
         assert!(info ==
                 Request::MostPopularTalks {
                     start_timestamp: common_timestamp,
