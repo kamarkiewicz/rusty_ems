@@ -280,8 +280,10 @@ mod tests {
                        "end_timestamp": "2016-02-01 18:00:00"}}"#;
         let info: Request = read_call(&data).expect("json input needs a fix");
 
-        let start_timestamp = parse_from_str("2016-01-20 10:00:00", "%Y-%m-%d %H:%M:%S").unwrap();
-        let end_timestamp = parse_from_str("2016-02-01 18:00:00", "%Y-%m-%d %H:%M:%S").unwrap();
+        let start_timestamp = Timestamp::parse_from_str("2016-01-20 10:00:00", "%Y-%m-%d %H:%M:%S")
+            .unwrap();
+        let end_timestamp = Timestamp::parse_from_str("2016-02-01 18:00:00", "%Y-%m-%d %H:%M:%S")
+            .unwrap();
         assert!(info ==
                 Request::Event {
                     login: "Donald_Grump11".to_owned(),
