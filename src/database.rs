@@ -6,6 +6,8 @@ use diesel::prelude::*;
 pub use diesel::pg::PgConnection;
 use super::api::Timestamp;
 
+use models::Person;
+
 pub fn establish_connection(login: String, password: String, baza: String) -> Result<PgConnection> {
     let database_url = format!("postgres://{}:{}@localhost/{}", login, password, baza);
     PgConnection::establish(&database_url)
@@ -42,11 +44,31 @@ pub fn create_event(conn: &PgConnection,
                     start_timestamp: Timestamp,
                     end_timestamp: Timestamp)
                     -> Result<()> {
-    use schema::person;
-    use models::{Person, Event, NewEvent};
+    use schema::event;
+    use models::{Event, NewEvent};
 
-    // TODO: authorize person as organizer
-    // TODO: insert new event
+    // authorize person as organizer
+    authorize_person(&conn, login, password, true)?;
+
+    // insert new event
+    let event = NewEvent {
+        eventname: eventname.as_ref(),
+        start_timestamp: start_timestamp,
+        end_timestamp: end_timestamp,
+    };
+
+    diesel::insert(&event)
+        .into(event::table)
+        .get_result::<Event>(conn)
+        .chain_err(|| "unable to add event to database")?;
 
     Ok(())
+}
+
+fn authorize_person(conn: &PgConnection,
+                    login: String,
+                    password: String,
+                    is_organizer: bool)
+                    -> Result<Person> {
+    Err("FIXME: authorize_person".into())
 }
