@@ -48,7 +48,8 @@ pub fn create_event(conn: &PgConnection,
     use models::{Event, NewEvent};
 
     // authorize person as organizer
-    authorize_person(&conn, login, password, true)?;
+    let person = authorize_person(&conn, login, password)?;
+    must_have_organizer_rights(person)?;
 
     // insert new event
     let event = NewEvent {
@@ -57,9 +58,11 @@ pub fn create_event(conn: &PgConnection,
         end_timestamp: end_timestamp,
     };
 
-    diesel::insert(&event)
-        .into(events::table)
-        .get_result::<Event>(conn)
+    /// INSERT INTO `events` (`eventname`, `start_timestamp`, `end_timestamp`) VALUES (?, ?, ?)
+    let query = diesel::insert(&event)
+        .into(events::table);
+    eprintln!("{}", debug_sql!(query));
+    query.get_result::<Event>(conn)
         .chain_err(|| "unable to add event to database")?;
 
     Ok(())
@@ -67,8 +70,26 @@ pub fn create_event(conn: &PgConnection,
 
 fn authorize_person(conn: &PgConnection,
                     login: String,
-                    password: String,
-                    is_organizer: bool)
+                    password: String)
                     -> Result<Person> {
-    Err("FIXME: authorize_person".into())
+    use schema::persons;
+    
+    /// SELECT `persons`.`id`, `persons`.`login`, `persons`.`password`, `persons`.`is_organizer`
+    /// FROM `persons` WHERE `persons`.`login` = ? AND `persons`.`password` = ? LIMIT ?
+    let query = persons::table
+        .filter(persons::login.eq(login))
+        .filter(persons::password.eq(password))
+        .limit(1);
+    eprintln!("{}", debug_sql!(query));
+    let authorized_person = query.first::<Person>(conn)
+        .chain_err(|| "Error loading user")?;
+    Ok(authorized_person)
+}
+
+fn must_have_organizer_rights(person: Person) -> Result<()> {
+    if person.is_organizer {
+        Ok(())
+    } else {
+        Err("Person doesn't have organizer rights".into())
+    }
 }
