@@ -4,3 +4,10 @@ CREATE TABLE persons (
   password varchar NOT NULL,
   is_organizer boolean NOT NULL DEFAULT false
 );
+
+CREATE TABLE events (
+	id serial PRIMARY KEY,
+	eventname varchar NOT NULL UNIQUE,
+	start_timestamp timestamp NOT NULL,
+	end_timestamp timestamp NOT NULL
+);
