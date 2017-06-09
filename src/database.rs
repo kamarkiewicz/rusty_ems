@@ -59,21 +59,43 @@ pub fn create_event(conn: &PgConnection,
     };
 
     /// INSERT INTO `events` (`eventname`, `start_timestamp`, `end_timestamp`) VALUES (?, ?, ?)
-    let query = diesel::insert(&event)
-        .into(events::table);
+    let query = diesel::insert(&event).into(events::table);
     eprintln!("{}", debug_sql!(query));
-    query.get_result::<Event>(conn)
+    query
+        .get_result::<Event>(conn)
         .chain_err(|| "unable to add event to database")?;
 
     Ok(())
 }
 
-fn authorize_person(conn: &PgConnection,
-                    login: String,
-                    password: String)
-                    -> Result<Person> {
+pub fn create_user(conn: &PgConnection,
+                   login: String,
+                   password: String,
+                   newlogin: String,
+                   newpassword: String)
+                   -> Result<()> {
     use schema::persons;
-    
+    use models::{Person, NewPerson};
+
+    let _ = authorize_person(&conn, login, password)?;
+
+    let new_person = NewPerson {
+        login: newlogin.as_ref(),
+        password: newpassword.as_ref(),
+        is_organizer: false,
+    };
+
+    diesel::insert(&new_person)
+        .into(persons::table)
+        .get_result::<Person>(conn)
+        .chain_err(|| "unable to add regular person to database")?;
+
+    Ok(())
+}
+
+fn authorize_person(conn: &PgConnection, login: String, password: String) -> Result<Person> {
+    use schema::persons;
+
     /// SELECT `persons`.`id`, `persons`.`login`, `persons`.`password`, `persons`.`is_organizer`
     /// FROM `persons` WHERE `persons`.`login` = ? AND `persons`.`password` = ? LIMIT ?
     let query = persons::table
@@ -81,7 +103,8 @@ fn authorize_person(conn: &PgConnection,
         .filter(persons::password.eq(password))
         .limit(1);
     eprintln!("{}", debug_sql!(query));
-    let authorized_person = query.first::<Person>(conn)
+    let authorized_person = query
+        .first::<Person>(conn)
         .chain_err(|| "Error loading user")?;
     Ok(authorized_person)
 }

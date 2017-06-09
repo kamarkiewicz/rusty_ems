@@ -52,7 +52,12 @@ impl Context {
                    password,
                    newlogin,
                    newpassword
-               } => { Response::NotImplemented },
+               } => {
+                   let conn = self.conn.as_ref().ok_or("establish connection first")?;
+                   create_user(&conn, login, password,
+                        newlogin, newpassword)?;
+                   Response::Ok(None)
+               },
 
                Request::Talk {
                    login,
