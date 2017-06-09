@@ -1,4 +1,4 @@
-CREATE TABLE event (
+CREATE TABLE events (
 	id serial PRIMARY KEY,
 	eventname varchar NOT NULL UNIQUE,
 	start_timestamp timestamp NOT NULL,

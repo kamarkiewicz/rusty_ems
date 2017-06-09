@@ -1,4 +1,4 @@
-CREATE TABLE person (
+CREATE TABLE persons (
   id serial PRIMARY KEY,
   login varchar NOT NULL UNIQUE,
   password varchar NOT NULL,

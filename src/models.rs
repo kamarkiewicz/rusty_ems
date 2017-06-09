@@ -2,7 +2,6 @@ use schema::*;
 use api::Timestamp;
 
 #[derive(Queryable, Identifiable)]
-#[table_name="person"]
 pub struct Person {
     pub id: i32,
     pub login: String,
@@ -11,7 +10,7 @@ pub struct Person {
 }
 
 #[derive(Insertable)]
-#[table_name="person"]
+#[table_name="persons"]
 pub struct NewPerson<'a> {
     pub login: &'a str,
     pub password: &'a str,
@@ -19,7 +18,6 @@ pub struct NewPerson<'a> {
 }
 
 #[derive(Queryable, Identifiable)]
-#[table_name="event"]
 pub struct Event {
     pub id: i32,
     pub eventname: String,
@@ -28,7 +26,7 @@ pub struct Event {
 }
 
 #[derive(Insertable)]
-#[table_name="event"]
+#[table_name="events"]
 pub struct NewEvent<'a> {
     pub eventname: &'a str,
     pub start_timestamp: Timestamp,

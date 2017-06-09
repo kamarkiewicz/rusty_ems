@@ -18,7 +18,7 @@ pub fn create_organizer_account(conn: &PgConnection,
                                 newlogin: String,
                                 newpassword: String)
                                 -> Result<()> {
-    use schema::person;
+    use schema::persons;
     use models::{Person, NewPerson};
 
     let organizer = NewPerson {
@@ -28,7 +28,7 @@ pub fn create_organizer_account(conn: &PgConnection,
     };
 
     diesel::insert(&organizer)
-        .into(person::table)
+        .into(persons::table)
         .get_result::<Person>(conn)
         .chain_err(|| "unable to add organizer person to database")?;
 
@@ -44,7 +44,7 @@ pub fn create_event(conn: &PgConnection,
                     start_timestamp: Timestamp,
                     end_timestamp: Timestamp)
                     -> Result<()> {
-    use schema::event;
+    use schema::events;
     use models::{Event, NewEvent};
 
     // authorize person as organizer
@@ -58,7 +58,7 @@ pub fn create_event(conn: &PgConnection,
     };
 
     diesel::insert(&event)
-        .into(event::table)
+        .into(events::table)
         .get_result::<Event>(conn)
         .chain_err(|| "unable to add event to database")?;
 
