@@ -27,8 +27,9 @@ pub fn create_organizer_account(conn: &PgConnection,
         is_organizer: true,
     };
 
-    diesel::insert(&organizer)
-        .into(persons::table)
+    let query = diesel::insert(&organizer).into(persons::table);
+    eprintln!("{}", debug_sql!(query));
+    query
         .get_result::<Person>(conn)
         .chain_err(|| "unable to add organizer person to database")?;
 
@@ -85,8 +86,9 @@ pub fn create_user(conn: &PgConnection,
         is_organizer: false,
     };
 
-    diesel::insert(&new_person)
-        .into(persons::table)
+    let query = diesel::insert(&new_person).into(persons::table);
+    eprintln!("{}", debug_sql!(query));
+    query
         .get_result::<Person>(conn)
         .chain_err(|| "unable to add regular person to database")?;
 
