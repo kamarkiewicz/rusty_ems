@@ -11,3 +11,32 @@ CREATE TABLE events (
 	start_timestamp timestamp NOT NULL,
 	end_timestamp timestamp NOT NULL
 );
+
+CREATE TABLE talks (
+	id serial PRIMARY KEY,
+  title varchar NOT NULL UNIQUE,
+	status smallint NOT NULL,
+	person_id integer NOT NULL REFERENCES persons (id),
+	event_id integer NOT NULL REFERENCES events (id),
+	start_timestamp timestamp NOT NULL,
+	add_timestamp timestamp NOT NULL DEFAULT now()
+);
+
+CREATE TABLE person_knows_person (
+	person1_id integer REFERENCES persons (id),
+	person2_id integer REFERENCES persons (id),
+	PRIMARY KEY (person1_id, person2_id)
+);
+
+CREATE TABLE person_attended_for_talk (
+	person_id integer REFERENCES persons (id),
+	talk_id integer REFERENCES talks (id),
+	PRIMARY KEY (person_id, talk_id)
+);
+
+CREATE TABLE person_rated_talk (
+	person_id integer REFERENCES persons (id),
+	talk_id integer REFERENCES talks (id),
+  rating smallint,
+	PRIMARY KEY (person_id, talk_id)
+);
