@@ -56,8 +56,8 @@ fn run() -> Result<()> {
 
     let stdin = io::stdin();
     let mut ctxt: Context = Context::new();
-    for line in stdin.lock().lines() {
-        match main_step(&mut ctxt, &line?) {
+    for (no, line) in stdin.lock().lines().enumerate() {
+        match main_step(&mut ctxt, &line?).chain_err(|| format!("on stdin line {}: ", no + 1)) {
             Ok(e) => main_ok(e),
             Err(e) => main_err(&e),
         }
