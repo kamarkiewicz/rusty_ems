@@ -27,7 +27,7 @@ pub fn create_organizer_account(conn: &PgConnection,
     };
 
     let query = diesel::insert(&organizer).into(persons::table);
-    eprintln!("{}", debug_sql!(query));
+    // eprintln!("{}", debug_sql!(query));
     query
         .get_result::<Person>(conn)
         .chain_err(|| "unable to add organizer person to database")?;
@@ -60,7 +60,7 @@ pub fn create_event(conn: &PgConnection,
 
     /// INSERT INTO `events` (`eventname`, `start_timestamp`, `end_timestamp`) VALUES (?, ?, ?)
     let query = diesel::insert(&event).into(events::table);
-    eprintln!("{}", debug_sql!(query));
+    // eprintln!("{}", debug_sql!(query));
     query
         .get_result::<Event>(conn)
         .chain_err(|| "unable to add event to database")?;
@@ -86,7 +86,7 @@ pub fn create_user(conn: &PgConnection,
     };
 
     let query = diesel::insert(&new_person).into(persons::table);
-    eprintln!("{}", debug_sql!(query));
+    // eprintln!("{}", debug_sql!(query));
     query
         .get_result::<Person>(conn)
         .chain_err(|| "unable to add regular person to database")?;
@@ -103,10 +103,10 @@ fn authorize_person(conn: &PgConnection, login: String, password: String) -> Res
         .filter(persons::login.eq(login))
         .filter(persons::password.eq(password))
         .limit(1);
-    eprintln!("{}", debug_sql!(query));
+    // eprintln!("{}", debug_sql!(query));
     let authorized_person = query
         .first::<Person>(conn)
-        .chain_err(|| "Error loading user")?;
+        .chain_err(|| "Error loading person")?;
     Ok(authorized_person)
 }
 
