@@ -252,11 +252,3 @@ fn authorize_person_as(conn: &Connection, login: String, password: String, perso
          .ok_or_else(|| "NotFound")?;
     Ok(())
 }
-
-// fn must_have_organizer_rights(person: &Person) -> Result<()> {
-//     if person.is_organizer {
-//         Ok(())
-//     } else {
-//         Err("Person doesn't have organizer rights".into())
-//     }
-// }
