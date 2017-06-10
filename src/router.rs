@@ -42,8 +42,16 @@ impl Context {
                    end_timestamp
                } => {
                    let conn = self.conn.as_ref().ok_or("establish connection first")?;
+                   let start_timestamp = match start_timestamp {
+                       Timestamp::Date(d) => d.and_hms(0, 0, 0),
+                       Timestamp::DateTime(dt) => dt
+                   };
+                   let end_timestamp = match end_timestamp {
+                       Timestamp::Date(d) => d.and_hms(23, 59, 59),
+                       Timestamp::DateTime(dt) => dt
+                   };
                    create_event(&conn, login, password, eventname,
-                        start_timestamp.and_hms(0,0,0), end_timestamp.and_hms(23,59,59))?;
+                        start_timestamp, end_timestamp)?;
                    Response::Ok(None)
                },
 

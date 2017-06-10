@@ -1,30 +1,32 @@
 use errors::*;
 use serde_json;
 
-pub use chrono::NaiveDateTime as Timestamp;
+pub use chrono::NaiveDateTime as DateTime;
 pub use chrono::NaiveDate as Date;
+
+#[derive(Debug, PartialEq)]
+pub enum Timestamp {
+    Date(Date),
+    DateTime(DateTime),
+}
 
 /// Timestamp formatter used by Serde. Supports ISO 8601
 /// https://www.postgresql.org/docs/current/static/datatype-datetime.html
 mod timestamp_fmt {
-    use super::Timestamp;
+    use super::{Timestamp, Date, DateTime};
     use serde::{self, Deserialize, Serializer, Deserializer};
 
-    const FORMAT: &'static str = "%Y-%m-%d %H:%M:%S";
-
-    #[allow(dead_code)]
-    pub fn serialize<S>(date: &Timestamp, serializer: S) -> Result<S::Ok, S::Error>
-        where S: Serializer
-    {
-        let s = format!("{}", date.format(FORMAT));
-        serializer.serialize_str(&s)
-    }
+    const FORMAT_DATETIME: &'static str = "%Y-%m-%d %H:%M:%S";
+    const FORMAT_DATE: &'static str = "%Y-%m-%d";
 
     pub fn deserialize<'de, D>(deserializer: D) -> Result<Timestamp, D::Error>
         where D: Deserializer<'de>
     {
         let s = String::deserialize(deserializer)?;
-        Timestamp::parse_from_str(&s, FORMAT).map_err(serde::de::Error::custom)
+        let datetime = DateTime::parse_from_str(&s, FORMAT_DATETIME)
+            .map(|dt| Timestamp::DateTime(dt));
+        let date = Date::parse_from_str(&s, FORMAT_DATE).map(|d| Timestamp::Date(d));
+        datetime.or(date).map_err(serde::de::Error::custom)
     }
 }
 mod date_fmt {
@@ -67,10 +69,10 @@ pub enum Request {
         login: String,
         password: String,
         eventname: String,
-        #[serde(with = "date_fmt")]
-        start_timestamp: Date,
-        #[serde(with = "date_fmt")]
-        end_timestamp: Date,
+        #[serde(with = "timestamp_fmt")]
+        start_timestamp: Timestamp,
+        #[serde(with = "timestamp_fmt")]
+        end_timestamp: Timestamp,
     },
 
     User {

@@ -1,5 +1,5 @@
 use schema::*;
-use api::Timestamp;
+use api::DateTime;
 
 #[derive(Queryable, Identifiable)]
 pub struct Person {
@@ -21,14 +21,14 @@ pub struct NewPerson<'a> {
 pub struct Event {
     pub id: i32,
     pub eventname: String,
-    pub start_timestamp: Timestamp,
-    pub end_timestmp: Timestamp,
+    pub start_timestamp: DateTime,
+    pub end_timestmp: DateTime,
 }
 
 #[derive(Insertable)]
 #[table_name="events"]
 pub struct NewEvent<'a> {
     pub eventname: &'a str,
-    pub start_timestamp: Timestamp,
-    pub end_timestamp: Timestamp,
+    pub start_timestamp: DateTime,
+    pub end_timestamp: DateTime,
 }

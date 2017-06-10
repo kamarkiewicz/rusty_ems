@@ -1,10 +1,9 @@
 use errors::*;
-// use models::*;
+use super::api::{Date, DateTime};
 
 use diesel;
 use diesel::prelude::*;
 pub use diesel::pg::PgConnection;
-use super::api::Timestamp;
 
 use models::Person;
 
@@ -42,8 +41,8 @@ pub fn create_event(conn: &PgConnection,
                     login: String,
                     password: String,
                     eventname: String,
-                    start_timestamp: Timestamp,
-                    end_timestamp: Timestamp)
+                    start_timestamp: DateTime,
+                    end_timestamp: DateTime)
                     -> Result<()> {
     use schema::events;
     use models::{Event, NewEvent};
