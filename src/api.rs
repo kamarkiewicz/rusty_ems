@@ -2,6 +2,7 @@ use errors::*;
 use serde_json;
 
 pub use chrono::NaiveDateTime as Timestamp;
+pub use chrono::NaiveDate as Date;
 
 /// Timestamp formatter used by Serde. Supports ISO 8601
 /// https://www.postgresql.org/docs/current/static/datatype-datetime.html
@@ -36,40 +37,27 @@ mod timestamp_fmt {
         Timestamp::parse_from_str(&s, FORMAT).map_err(serde::de::Error::custom)
     }
 }
-
-mod event_start_timestamp_fmt {
-    use super::Timestamp;
-    use chrono::NaiveDate;
+mod date_fmt {
+    use super::Date;
     use serde::{self, Deserialize, Deserializer};
 
     const FORMAT: &'static str = "%Y-%m-%d";
 
-    pub fn deserialize<'de, D>(deserializer: D) -> Result<Timestamp, D::Error>
+    pub fn deserialize<'de, D>(deserializer: D) -> Result<Date, D::Error>
         where D: Deserializer<'de>
     {
         let s = String::deserialize(deserializer)?;
-        NaiveDate::parse_from_str(&s, FORMAT)
-            .map(|date| date.and_hms(0, 0, 0))
-            .map_err(serde::de::Error::custom)
+        Date::parse_from_str(&s, FORMAT).map_err(serde::de::Error::custom)
     }
 }
 
-mod event_end_timestamp_fmt {
-    use super::Timestamp;
-    use chrono::NaiveDate;
-    use serde::{self, Deserialize, Deserializer};
-
-    const FORMAT: &'static str = "%Y-%m-%d";
-
-    pub fn deserialize<'de, D>(deserializer: D) -> Result<Timestamp, D::Error>
-        where D: Deserializer<'de>
-    {
-        let s = String::deserialize(deserializer)?;
-        NaiveDate::parse_from_str(&s, FORMAT)
-            .map(|date| date.and_hms(23, 59, 59))
-            .map_err(serde::de::Error::custom)
-    }
+#[derive(Debug, Deserialize, PartialEq)]
+#[serde(untagged)]
+pub enum StrOr<T> {
+    Str(String),
+    Typ(T),
 }
+
 
 #[derive(Debug, Deserialize, PartialEq)]
 #[serde(rename_all = "snake_case")]
@@ -90,10 +78,10 @@ pub enum Request {
         login: String,
         password: String,
         eventname: String,
-        #[serde(with = "event_start_timestamp_fmt")]
-        start_timestamp: Timestamp,
-        #[serde(with = "event_end_timestamp_fmt")]
-        end_timestamp: Timestamp,
+        #[serde(with = "date_fmt")]
+        start_timestamp: Date,
+        #[serde(with = "date_fmt")]
+        end_timestamp: Date,
     },
 
     User {
@@ -112,7 +100,7 @@ pub enum Request {
         #[serde(with = "timestamp_fmt")]
         start_timestamp: Timestamp,
         room: String,
-        initial_evaluation: i16,
+        initial_evaluation: StrOr<i16>,
         eventname: String,
     },
 
@@ -132,7 +120,7 @@ pub enum Request {
         login: String,
         password: String,
         talk: String,
-        rating: i16,
+        rating: StrOr<i16>,
     },
 
     Reject {
@@ -156,11 +144,11 @@ pub enum Request {
         login2: String,
     },
 
-    UserPlan { login: String, limit: String },
+    UserPlan { login: String, limit: StrOr<u32> },
 
     DayPlan {
-        #[serde(with = "timestamp_fmt")]
-        timestamp: Timestamp,
+        #[serde(with = "date_fmt")]
+        timestamp: Date,
     },
 
     BestTalks {
@@ -168,7 +156,7 @@ pub enum Request {
         start_timestamp: Timestamp,
         #[serde(with = "timestamp_fmt")]
         end_timestamp: Timestamp,
-        limit: String,
+        limit: StrOr<u32>,
         all: String,
     },
 
@@ -177,7 +165,7 @@ pub enum Request {
         start_timestamp: Timestamp,
         #[serde(with = "timestamp_fmt")]
         end_timestamp: Timestamp,
-        limit: String,
+        limit: StrOr<u32>,
     },
 
     AttendedTalks { login: String, password: String },
@@ -185,10 +173,10 @@ pub enum Request {
     AbandonedTalks {
         login: String,
         password: String,
-        limit: String,
+        limit: StrOr<u32>,
     },
 
-    RecentlyAddedTalks { limit: String },
+    RecentlyAddedTalks { limit: StrOr<u32> },
 
     RejectedTalks { login: String, password: String },
 
@@ -201,7 +189,7 @@ pub enum Request {
         start_timestamp: Timestamp,
         #[serde(with = "timestamp_fmt")]
         end_timestamp: Timestamp,
-        limit: String,
+        limit: StrOr<u32>,
     },
 
     FriendsEvents {
@@ -213,11 +201,11 @@ pub enum Request {
     RecommendedTalks {
         login: String,
         password: String,
-        #[serde(with = "timestamp_fmt")]
-        start_timestamp: Timestamp,
-        #[serde(with = "timestamp_fmt")]
-        end_timestamp: Timestamp,
-        limit: String,
+        #[serde(with = "date_fmt")]
+        start_timestamp: Date,
+        #[serde(with = "date_fmt")]
+        end_timestamp: Date,
+        limit: StrOr<u32>,
     },
 }
 
