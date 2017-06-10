@@ -1,12 +1,12 @@
 use errors::*;
 use serde_json;
 
-pub use self::timestamp_fmt::Timestamp;
+pub use chrono::NaiveDateTime as Timestamp;
 
 /// Timestamp formatter used by Serde. Supports ISO 8601
 /// https://www.postgresql.org/docs/current/static/datatype-datetime.html
 mod timestamp_fmt {
-    pub use chrono::NaiveDateTime as Timestamp;
+    use super::Timestamp;
     use serde::{self, Deserialize, Serializer, Deserializer};
 
     const FORMAT: &'static str = "%Y-%m-%d %H:%M:%S";
@@ -37,6 +37,39 @@ mod timestamp_fmt {
     }
 }
 
+mod event_start_timestamp_fmt {
+    use super::Timestamp;
+    use chrono::NaiveDate;
+    use serde::{self, Deserialize, Deserializer};
+
+    const FORMAT: &'static str = "%Y-%m-%d";
+
+    pub fn deserialize<'de, D>(deserializer: D) -> Result<Timestamp, D::Error>
+        where D: Deserializer<'de>
+    {
+        let s = String::deserialize(deserializer)?;
+        NaiveDate::parse_from_str(&s, FORMAT)
+            .map(|date| date.and_hms(0, 0, 0))
+            .map_err(serde::de::Error::custom)
+    }
+}
+
+mod event_end_timestamp_fmt {
+    use super::Timestamp;
+    use chrono::NaiveDate;
+    use serde::{self, Deserialize, Deserializer};
+
+    const FORMAT: &'static str = "%Y-%m-%d";
+
+    pub fn deserialize<'de, D>(deserializer: D) -> Result<Timestamp, D::Error>
+        where D: Deserializer<'de>
+    {
+        let s = String::deserialize(deserializer)?;
+        NaiveDate::parse_from_str(&s, FORMAT)
+            .map(|date| date.and_hms(23, 59, 59))
+            .map_err(serde::de::Error::custom)
+    }
+}
 
 #[derive(Debug, Deserialize, PartialEq)]
 #[serde(rename_all = "snake_case")]
@@ -57,9 +90,9 @@ pub enum Request {
         login: String,
         password: String,
         eventname: String,
-        #[serde(with = "timestamp_fmt")]
+        #[serde(with = "event_start_timestamp_fmt")]
         start_timestamp: Timestamp,
-        #[serde(with = "timestamp_fmt")]
+        #[serde(with = "event_end_timestamp_fmt")]
         end_timestamp: Timestamp,
     },
 
