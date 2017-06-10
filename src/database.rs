@@ -128,6 +128,13 @@ pub fn register_or_accept_talk(conn: &PgConnection,
                                initial_evaluation: i16,
                                eventname: String)
                                -> Result<()> {
+    use schema::talks;
+    // use models::{Talk, NewTalk};
+
+    // authorize person as organizer
+    let person = authorize_person(&conn, login, password)?;
+    must_have_organizer_rights(&person)?;
+
     Err("UNIMPL".into())
 }
 
