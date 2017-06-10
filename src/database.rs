@@ -1,7 +1,7 @@
 use errors::*;
 use api::{Date, DateTime};
 
-// use models::Person;
+use api::{AttendedTalk};
 
 pub use postgres::{Connection, TlsMode};
 
@@ -169,7 +169,8 @@ pub fn register_user_for_event(conn: &Connection,
 /// (*U) attended_talks <login> <password>
 /// zwraca dla danego uczestnika referaty, na których był obecny
 ///  <talk> <start_timestamp> <title> <room>
-fn attended_talks(conn: &Connection, login: String, password: String) -> Result<()> {
+pub fn attended_talks(conn: &Connection, login: String, password: String)
+    -> Result<Vec<AttendedTalk>> {
     // let person = authorize_person(&conn, login, password)?;
 
     // use schema::{person_attended_for_talk, talks};
@@ -180,7 +181,8 @@ fn attended_talks(conn: &Connection, login: String, password: String) -> Result<
     //        WHERE paft.person_id = 1 AND talks.start_timestamp >= 2;"#);
     // let talks: Vec<AttendedTalks> = query.get_results(conn).chain_err(|| "sth goes wrong...")?;
 
-    Err("".into())
+
+    Ok(Vec::new())
 }
 
 /// (*O) abandoned_talks <login> <password>  <limit>

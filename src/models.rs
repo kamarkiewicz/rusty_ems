@@ -52,11 +52,3 @@
 // //     pub Talkname: &'a str,
 // //     pub start_timestamp: DateTime,
 // // }
-
-// #[derive(Debug)]
-// pub struct AttendedTalks {
-//     talk: String,
-//     start_timestamp: DateTime, //  diesel::types::Timestamp,
-//     title: String,
-//     room: String,
-// }

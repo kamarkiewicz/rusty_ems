@@ -21,7 +21,7 @@ impl Context {
                    baza,
                } => {
                    self.conn = Some(establish_connection(login, password, baza)?);
-                   Response::Ok(None)
+                   Response::Ok(ResponseInfo::Empty)
                },
 
                Request::Organizer {
@@ -31,7 +31,7 @@ impl Context {
                } => {
                    let conn = self.conn.as_ref().ok_or("establish connection first")?;
                     create_organizer_account(&conn, newlogin, newpassword)?;
-                    Response::Ok(None)
+                    Response::Ok(ResponseInfo::Empty)
                },
 
                Request::Event {
@@ -52,7 +52,7 @@ impl Context {
                    };
                    create_event(&conn, login, password, eventname,
                         start_timestamp, end_timestamp)?;
-                   Response::Ok(None)
+                   Response::Ok(ResponseInfo::Empty)
                },
 
                Request::User {
@@ -64,7 +64,7 @@ impl Context {
                    let conn = self.conn.as_ref().ok_or("establish connection first")?;
                    create_user(&conn, login, password,
                         newlogin, newpassword)?;
-                   Response::Ok(None)
+                   Response::Ok(ResponseInfo::Empty)
                },
 
                Request::Talk {
@@ -86,7 +86,7 @@ impl Context {
                    register_or_accept_talk(&conn, login, password,
                    speakerlogin, talk, title, start_timestamp, room,
                    initial_evaluation, eventname)?;
-                   Response::Ok(None)
+                   Response::Ok(ResponseInfo::Empty)
                },
 
                Request::RegisterUserForEvent {
@@ -96,7 +96,7 @@ impl Context {
                } => {
                    let conn = self.conn.as_ref().ok_or("establish connection first")?;
                    register_user_for_event(&conn, login, password, eventname)?;
-                   Response::Ok(None)
+                   Response::Ok(ResponseInfo::Empty)
                },
 
                Request::Attendance {
@@ -149,7 +149,11 @@ impl Context {
                    limit
                } => { Response::NotImplemented },
 
-               Request::AttendedTalks { login, password } => { Response::NotImplemented },
+               Request::AttendedTalks { login, password } => {
+                   let conn = self.conn.as_ref().ok_or("establish connection first")?;
+                   let talks = attended_talks(&conn, login, password)?;
+                   Response::Ok(ResponseInfo::AttendedTalks(talks))
+               },
 
                Request::AbandonedTalks {
                    login,

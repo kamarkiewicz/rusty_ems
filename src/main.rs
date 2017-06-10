@@ -74,12 +74,12 @@ fn main_step(ctxt: &mut Context, line: &str) -> Result<Response> {
 
 fn main_ok(e: Response) -> () {
     let response_json = match e {
-        Response::Ok(Some(data_json)) => {
-            let ok_json = json!({ "status": "OK", "data": data_json });
+        Response::Ok(ResponseInfo::Empty) => {
+            let ok_json = json!({ "status": "OK" });
             ok_json.to_string()
         }
-        Response::Ok(None) => {
-            let ok_json = json!({ "status": "OK" });
+        Response::Ok(serializable) => {
+            let ok_json = json!({ "status": "OK", "data": serializable });
             ok_json.to_string()
         }
         Response::NotImplemented => {

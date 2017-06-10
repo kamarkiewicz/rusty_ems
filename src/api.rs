@@ -229,8 +229,23 @@ pub enum Request {
 
 pub enum Response {
     #[allow(dead_code)]
-    Ok(Option<String>),
+    Ok(ResponseInfo),
     NotImplemented,
+}
+
+#[derive(Debug, Serialize, PartialEq)]
+#[serde(untagged)]
+pub enum ResponseInfo {
+    AttendedTalks(Vec<AttendedTalk>),
+    Empty
+}
+
+#[derive(Debug, Serialize, PartialEq)]
+pub struct AttendedTalk {
+    talk: String,
+    start_timestamp: DateTime,
+    title: String,
+    room: String,
 }
 
 static SECRET: &str = "d8578edf8458ce06fbc5bb76a58c5ca4";
