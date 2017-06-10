@@ -112,7 +112,7 @@ pub enum Request {
         #[serde(with = "timestamp_fmt")]
         start_timestamp: Timestamp,
         room: String,
-        initial_evaluation: String,
+        initial_evaluation: i16,
         eventname: String,
     },
 
