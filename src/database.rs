@@ -103,16 +103,16 @@ pub fn register_user_for_event(conn: &Connection,
                                password: String,
                                eventname: String)
                                -> Result<()> {
-    authorize_person_as(conn, login, password, PersonType::Participant)?;
+    let person_id = authorize_person_as(conn, login, password, PersonType::Participant)?;
 
-    // use schema::events;
-    // use models::Event;
-    // let query = events::table
-    //     .filter(events::eventname.eq(eventname))
-    //     .limit(1);
-    // let event = query
-    //     .first::<Event>(conn)
-    //     .chain_err(|| "Error loading event")?;
+    let event_id: i32 = conn.query(r#"SELECT id FROM events
+                                  WHERE eventname=$1
+                                  LIMIT 1"#, &[&eventname])
+         .chain_err(|| "Unable to load event")?
+         .iter()
+         .map(|row| row.get("id"))
+         .next()
+         .ok_or_else(|| "NotFound")?;
 
     // use schema::person_registered_for_event;
     // use diesel::types::{Bool, Integer};
@@ -236,20 +236,20 @@ enum PersonType {
 }
 
 fn authorize_person_as(conn: &Connection, login: String, password: String, person_type: PersonType)
-    -> Result<()> {
+    -> Result<i32> {
     use self::PersonType::*;
     let is_organizer = match person_type {
         Whatever => "",
         Participant => "AND is_organizer=FALSE",
         Organizer => "AND is_organizer=TRUE",
     };
-    conn.query(&format!(r#"SELECT 1 FROM persons
+    conn.query(&format!(r#"SELECT id FROM persons
                            WHERE login=$1 AND password=$2 {}
                            LIMIT 1"#, is_organizer)[..],
                 &[&login, &password])
          .chain_err(|| "Unable to authorize person")?
          .iter()
+         .map(|row| row.get("id"))
          .next()
-         .ok_or_else(|| "NotFound")?;
-    Ok(())
+         .ok_or_else(|| "NotFound".into())
 }
