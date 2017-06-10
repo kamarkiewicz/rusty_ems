@@ -132,7 +132,7 @@ pub enum Request {
         login: String,
         password: String,
         talk: String,
-        rating: u8,
+        rating: i16,
     },
 
     Reject {
