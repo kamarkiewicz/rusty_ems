@@ -38,7 +38,6 @@ pub fn create_event(conn: &Connection,
                     start_timestamp: DateTime,
                     end_timestamp: DateTime)
                     -> Result<()> {
-    // authorize person as organizer
     authorize_person_as_organizer(conn, login, password)?;
 
     // insert new event
