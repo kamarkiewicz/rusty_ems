@@ -79,10 +79,14 @@ impl Context {
                    eventname
                } => {
                    let conn = self.conn.as_ref().ok_or("establish connection first")?;
+                   let initial_evaluation = initial_evaluation.validate()?;
+                   if 0 > initial_evaluation || initial_evaluation > 10 {
+                       return Err("initial_evaluation must be in range 0-10".into());
+                   };
                    register_or_accept_talk(&conn, login, password,
                    speakerlogin, talk, title, start_timestamp, room,
-                   initial_evaluation.validate()?, eventname)?;
-                    Response::Ok(None)
+                   initial_evaluation, eventname)?;
+                   Response::Ok(None)
                },
 
                Request::RegisterUserForEvent {
