@@ -92,6 +92,28 @@ pub fn create_user(conn: &PgConnection,
     Ok(())
 }
 
+/// (*O) talk <login> <password>
+///     <speakerlogin> <talk> <title> <start_timestamp> <room> <initial_evaluation> <eventname>
+/// rejestracja referatu/zatwierdzenie referatu spontanicznego,
+/// <talk> jest unikalnym identyfikatorem referatu,
+/// <initial_evaluation> jest oceną organizatora w skali 0-10 – jest to ocena traktowana
+///     tak samo jak ocena uczestnika obecnego na referacie,
+/// <eventname> jest nazwą wydarzenia, którego częścią jest dany referat - może być pustym
+///     napisem, co oznacza, że referat nie jest przydzielony do jakiegokolwiek wydarzenia
+pub fn register_or_accept_talk(conn: &PgConnection,
+                               login: String,
+                               password: String,
+                               speakerlogin: String,
+                               talk: String,
+                               title: String,
+                               start_timestamp: DateTime,
+                               room: String,
+                               initial_evaluation: i16,
+                               eventname: String)
+                               -> Result<()> {
+    Err("UNIMPL".into())
+}
+
 fn authorize_person(conn: &PgConnection, login: String, password: String) -> Result<Person> {
     use schema::persons;
 

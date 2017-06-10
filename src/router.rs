@@ -77,7 +77,13 @@ impl Context {
                    room,
                    initial_evaluation,
                    eventname
-               } => { Response::NotImplemented },
+               } => {
+                   let conn = self.conn.as_ref().ok_or("establish connection first")?;
+                   register_or_accept_talk(&conn, login, password,
+                   speakerlogin, talk, title, start_timestamp, room,
+                   initial_evaluation.validate()?, eventname)?;
+                    Response::Ok(None)
+               },
 
                Request::RegisterUserForEvent {
                    login,

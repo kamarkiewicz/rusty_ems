@@ -65,6 +65,18 @@ pub enum StrOr<T> {
     Typ(T),
 }
 
+use std::str::FromStr;
+impl StrOr<i16> {
+    pub fn validate(self) -> Result<i16> {
+        use std::num::ParseIntError;
+        use StrOr::*;
+        match self {
+            Str(s) => FromStr::from_str(&s[..]).map_err(|e: ParseIntError| e.into()),
+            Typ(t) => Ok(t),
+        }
+    }
+}
+
 #[derive(Debug, Deserialize, PartialEq)]
 #[serde(rename_all = "snake_case")]
 pub enum Request {
@@ -235,7 +247,6 @@ pub fn read_call(data: &str) -> Result<Request> {
     }
     Ok(info)
 }
-
 
 #[cfg(test)]
 mod tests {

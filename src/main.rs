@@ -27,6 +27,7 @@ mod router;
 // this crate will `use errors::*;` to get access to everything
 // `error_chain!` creates.
 mod errors {
+    use super::std::num;
     use super::std::io;
     use super::serde_json;
     // Create the Error, ErrorKind, ResultExt, and Result types
@@ -34,6 +35,7 @@ mod errors {
         foreign_links {
             Io(io::Error);
             Json(serde_json::Error);
+            Num(num::ParseIntError);
         }
     }
 }
