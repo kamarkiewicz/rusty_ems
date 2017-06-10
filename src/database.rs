@@ -6,6 +6,7 @@ use diesel::prelude::*;
 pub use diesel::pg::PgConnection;
 
 use models::Person;
+use diesel::expression::sql;
 
 /// (*) open <baza> <login> <password>
 /// przekazuje dane umożliwiające podłączenie Twojego programu do bazy - nazwę bazy,
@@ -33,8 +34,9 @@ pub fn create_organizer_account(conn: &PgConnection,
         is_organizer: true,
     };
 
+    // INSERT INTO `persons` (`login`, `password`, `is_organizer`) VALUES (?, ?, ?)
     let query = diesel::insert(&organizer).into(persons::table);
-    // eprintln!("{}", debug_sql!(query));
+    eprintln!("{}", debug_sql!(query));
     query
         .get_result::<Person>(conn)
         .chain_err(|| "unable to add organizer person to database")?;
@@ -145,10 +147,27 @@ pub fn register_user_for_event(conn: &PgConnection,
                                password: String,
                                eventname: String)
                                -> Result<()> {
-    
     let person = authorize_person(&conn, login, password)?;
-    
-    // TODO: insert person_registered_for_event
+
+    use schema::events;
+    use models::Event;
+    let query = events::table
+        .filter(events::eventname.eq(eventname))
+        .limit(1);
+    let event = query
+        .first::<Event>(conn)
+        .chain_err(|| "Error loading event")?;
+
+    use schema::person_registered_for_event;
+    use diesel::types::{Bool, Integer};
+    let query = sql::<Bool>(
+        r#"INSERT INTO person_registered_for_event(person_id, event_id) VALUES ($1, $2)"#);
+    let query = query
+        .bind::<Integer, _>(person.id)
+        .bind::<Integer, _>(event.id);
+    query
+        .execute(conn)
+        .chain_err(|| "Person can't be registered for event")?;
 
     Ok(())
 }
