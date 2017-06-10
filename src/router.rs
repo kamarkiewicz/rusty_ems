@@ -93,7 +93,11 @@ impl Context {
                    login,
                    password,
                    eventname
-               } => { Response::NotImplemented },
+               } => {
+                   let conn = self.conn.as_ref().ok_or("establish connection first")?;
+                   register_user_for_event(&conn, login, password, eventname)?;
+                   Response::Ok(None)
+               },
 
                Request::Attendance {
                    login,

@@ -138,6 +138,16 @@ pub fn register_or_accept_talk(conn: &PgConnection,
     Err("UNIMPL".into())
 }
 
+/// (*U) register_user_for_event <login> <password> <eventname>
+/// rejestracja uczestnika <login> na wydarzenie <eventname>
+pub fn register_user_for_event(conn: &PgConnection,
+                               login: String,
+                               password: String,
+                               eventname: String)
+                               -> Result<()> {
+    Err("UNIMPL".into())
+}
+
 fn authorize_person(conn: &PgConnection, login: String, password: String) -> Result<Person> {
     use schema::persons;
 

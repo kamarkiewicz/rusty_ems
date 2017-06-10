@@ -52,4 +52,3 @@ pub struct NewEvent<'a> {
 //     pub Talkname: &'a str,
 //     pub start_timestamp: DateTime,
 // }
-
