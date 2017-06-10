@@ -248,7 +248,7 @@ fn fff() {}
 
 fn authorize_person_as_organizer(conn: &Connection, login: String, password: String)
     -> Result<()> {
-    &conn.query(r#"SELECT 1 FROM persons
+    conn.query(r#"SELECT 1 FROM persons
                    WHERE login=$1 AND password=$2 AND is_organizer=TRUE
                    LIMIT 1"#,
                 &[&login, &password])
