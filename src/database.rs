@@ -35,8 +35,6 @@ pub fn create_organizer_account(conn: &PgConnection,
     Ok(())
 }
 
-#[allow(unused_variables)]
-#[allow(unused_imports)]
 pub fn create_event(conn: &PgConnection,
                     login: String,
                     password: String,
