@@ -38,7 +38,7 @@ pub fn create_event(conn: &Connection,
                     start_timestamp: DateTime,
                     end_timestamp: DateTime)
                     -> Result<()> {
-    authorize_person_as_organizer(conn, login, password)?;
+    authorize_person_as(conn, login, password, PersonType::Organizer)?;
 
     // insert new event
     conn.execute(r#"INSERT INTO events (eventname, start_timestamp, end_timestamp)
@@ -61,24 +61,13 @@ pub fn create_user(conn: &Connection,
                    newlogin: String,
                    newpassword: String)
                    -> Result<()> {
-    // use schema::persons;
-    // use models::{Person, NewPerson};
+    authorize_person_as(conn, login, password, PersonType::Organizer)?;
 
-    // // authorize person as organizer
-    // let person = authorize_person(&conn, login, password)?;
-    // must_have_organizer_rights(&person)?;
-
-    // let new_person = NewPerson {
-    //     login: newlogin.as_ref(),
-    //     password: newpassword.as_ref(),
-    //     is_organizer: false,
-    // };
-
-    // let query = diesel::insert(&new_person).into(persons::table);
-    // // eprintln!("{}", debug_sql!(query));
-    // query
-    //     .get_result::<Person>(conn)
-    //     .chain_err(|| "unable to add regular person to database")?;
+    // insert new person
+    conn.execute(r#"INSERT INTO persons (login, password, is_organizer)
+                    VALUES ($1, $2, FALSE)"#,
+                 &[&newlogin, &newpassword])
+        .chain_err(|| "Unable to insert participant person")?;
 
     Ok(())
 }
@@ -102,12 +91,7 @@ pub fn register_or_accept_talk(conn: &Connection,
                                initial_evaluation: i16,
                                eventname: String)
                                -> Result<()> {
-    // use schema::talks;
-    // use models::{Talk, NewTalk};
-
-    // authorize person as organizer
-    // let person = authorize_person(&conn, login, password)?;
-    // must_have_organizer_rights(&person)?;
+    authorize_person_as(conn, login, password, PersonType::Organizer)?;
 
     Err("UNIMPL".into())
 }
@@ -119,7 +103,7 @@ pub fn register_user_for_event(conn: &Connection,
                                password: String,
                                eventname: String)
                                -> Result<()> {
-    // let person = authorize_person(&conn, login, password)?;
+    authorize_person_as(conn, login, password, PersonType::Participant)?;
 
     // use schema::events;
     // use models::Event;
@@ -245,11 +229,22 @@ fn attended_talks(conn: &Connection, login: String, password: String) -> Result<
 ///  <talk> <speakerlogin> <start_timestamp> <title> <room> <score>
 fn fff() {}
 
-fn authorize_person_as_organizer(conn: &Connection, login: String, password: String)
+enum PersonType {
+    Whatever,
+    Participant,
+    Organizer,
+}
+
+fn authorize_person_as(conn: &Connection, login: String, password: String, person_type: PersonType)
     -> Result<()> {
-    conn.query(r#"SELECT 1 FROM persons
-                   WHERE login=$1 AND password=$2 AND is_organizer=TRUE
-                   LIMIT 1"#,
+    let is_organizer = match person_type {
+        PersonType::Whatever => "",
+        PersonType::Participant => "AND is_organizer=FALSE",
+        PersonType::Organizer => "AND is_organizer=TRUE",
+    };
+    conn.query(&format!(r#"SELECT 1 FROM persons
+                   WHERE login=$1 AND password=$2 {}
+                   LIMIT 1"#, is_organizer)[..],
                 &[&login, &password])
          .chain_err(|| "Unable to authorize person")?
          .iter()
