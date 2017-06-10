@@ -145,7 +145,12 @@ pub fn register_user_for_event(conn: &PgConnection,
                                password: String,
                                eventname: String)
                                -> Result<()> {
-    Err("UNIMPL".into())
+    
+    let person = authorize_person(&conn, login, password)?;
+    
+    // TODO: insert person_registered_for_event
+
+    Ok(())
 }
 
 fn authorize_person(conn: &PgConnection, login: String, password: String) -> Result<Person> {

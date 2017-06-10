@@ -28,6 +28,12 @@ CREATE TABLE person_knows_person (
 	PRIMARY KEY (person1_id, person2_id)
 );
 
+CREATE TABLE person_registered_for_event (
+	person_id integer REFERENCES persons (id),
+	event_id integer REFERENCES events (id),
+	PRIMARY KEY (person_id, event_id)
+);
+
 CREATE TABLE person_attended_for_talk (
 	person_id integer REFERENCES persons (id),
 	talk_id integer REFERENCES talks (id),
