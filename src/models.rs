@@ -52,3 +52,12 @@ pub struct NewEvent<'a> {
 //     pub Talkname: &'a str,
 //     pub start_timestamp: DateTime,
 // }
+
+// use diesel;
+#[derive(Debug, Queryable)]
+pub struct AttendedTalks {
+    talk: String,
+    start_timestamp: DateTime, //  diesel::types::Timestamp,
+    title: String,
+    room: String,
+}

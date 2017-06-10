@@ -218,6 +218,22 @@ pub fn register_user_for_event(conn: &PgConnection,
 /// (*U) attended_talks <login> <password>
 /// zwraca dla danego uczestnika referaty, na których był obecny 
 ///  <talk> <start_timestamp> <title> <room>
+fn attended_talks(conn: &PgConnection,
+                  login: String,
+                  password: String)
+                  -> Result<()> {
+    let person = authorize_person(&conn, login, password)?;
+
+    use schema::{person_attended_for_talk, talks};
+    use models::AttendedTalks;
+    let query = sql::<AttendedTalks>(
+        r#"SELECT talk, start_timestamp, title, room FROM person_attended_for_talk paft
+           JOIN talks ON paft.talk_id=talks.id
+           WHERE paft.person_id = 1 AND talks.start_timestamp >= 2;"#);
+    let talks: Vec<AttendedTalks> = query.get_results(conn).chain_err(|| "sth goes wrong...")?;
+
+    Err("".into())
+}
 
 /// (*O) abandoned_talks <login> <password>  <limit>
 /// zwraca listę referatów posortowaną malejąco wg liczby uczestników
