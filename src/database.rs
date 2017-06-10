@@ -243,8 +243,8 @@ fn authorize_person_as(conn: &Connection, login: String, password: String, perso
         PersonType::Organizer => "AND is_organizer=TRUE",
     };
     conn.query(&format!(r#"SELECT 1 FROM persons
-                   WHERE login=$1 AND password=$2 {}
-                   LIMIT 1"#, is_organizer)[..],
+                           WHERE login=$1 AND password=$2 {}
+                           LIMIT 1"#, is_organizer)[..],
                 &[&login, &password])
          .chain_err(|| "Unable to authorize person")?
          .iter()
