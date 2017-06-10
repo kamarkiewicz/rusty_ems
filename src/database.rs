@@ -38,7 +38,7 @@ pub fn create_event(conn: &Connection,
                     start_timestamp: DateTime,
                     end_timestamp: DateTime)
                     -> Result<()> {
-    authorize_person_as(conn, login, password, PersonType::Organizer)?;
+    authorize_person_as(conn, login, Some(password), PersonType::Organizer)?;
 
     // insert new event
     conn.execute(r#"INSERT INTO events (eventname, start_timestamp, end_timestamp)
@@ -61,7 +61,7 @@ pub fn create_user(conn: &Connection,
                    newlogin: String,
                    newpassword: String)
                    -> Result<()> {
-    authorize_person_as(conn, login, password, PersonType::Organizer)?;
+    authorize_person_as(conn, login, Some(password), PersonType::Organizer)?;
 
     // insert new person
     conn.execute(r#"INSERT INTO persons (login, password, is_organizer)
@@ -91,7 +91,7 @@ pub fn register_or_accept_talk(conn: &Connection,
                                initial_evaluation: i16,
                                eventname: String)
                                -> Result<()> {
-    authorize_person_as(conn, login, password, PersonType::Organizer)?;
+    authorize_person_as(conn, login, Some(password), PersonType::Organizer)?;
 
     Err("UNIMPL".into())
 }
@@ -103,27 +103,22 @@ pub fn register_user_for_event(conn: &Connection,
                                password: String,
                                eventname: String)
                                -> Result<()> {
-    let person_id = authorize_person_as(conn, login, password, PersonType::Participant)?;
+    let person_id = authorize_person_as(conn, login, Some(password), PersonType::Participant)?;
 
     let event_id: i32 = conn.query(r#"SELECT id FROM events
                                   WHERE eventname=$1
-                                  LIMIT 1"#, &[&eventname])
-         .chain_err(|| "Unable to load event")?
-         .iter()
-         .map(|row| row.get("id"))
-         .next()
-         .ok_or_else(|| "NotFound")?;
+                                  LIMIT 1"#,
+                                   &[&eventname])
+        .chain_err(|| "Unable to load event")?
+        .iter()
+        .map(|row| row.get("id"))
+        .next()
+        .ok_or_else(|| "NotFound")?;
 
-    // use schema::person_registered_for_event;
-    // use diesel::types::{Bool, Integer};
-    // let query = sql::<Bool>(
-    //     r#"INSERT INTO person_registered_for_event(person_id, event_id) VALUES ($1, $2)"#)
-    //     .bind::<Integer, _>(person.id)
-    //     .bind::<Integer, _>(event.id);
-    // // eprintln!("{}", debug_sql!(query));
-    // query
-    //     .execute(conn)
-    //     .chain_err(|| "Person can't be registered for event")?;
+    conn.execute(r#"INSERT INTO person_registered_for_event (person_id, event_id)
+                    VALUES ($1, $2)"#,
+                 &[&person_id, &event_id])
+        .chain_err(|| "Person can't be registered for event")?;
 
     Ok(())
 }
@@ -235,21 +230,33 @@ enum PersonType {
     Organizer,
 }
 
-fn authorize_person_as(conn: &Connection, login: String, password: String, person_type: PersonType)
-    -> Result<i32> {
+fn authorize_person_as(conn: &Connection,
+                       login: String,
+                       password: Option<String>,
+                       person_type: PersonType)
+                       -> Result<i32> {
     use self::PersonType::*;
-    let is_organizer = match person_type {
+    let organizer_part = match person_type {
         Whatever => "",
         Participant => "AND is_organizer=FALSE",
         Organizer => "AND is_organizer=TRUE",
     };
-    conn.query(&format!(r#"SELECT id FROM persons
-                           WHERE login=$1 AND password=$2 {}
-                           LIMIT 1"#, is_organizer)[..],
-                &[&login, &password])
-         .chain_err(|| "Unable to authorize person")?
-         .iter()
-         .map(|row| row.get("id"))
-         .next()
-         .ok_or_else(|| "NotFound".into())
+
+    match password {
+        Some(password) => conn.query(&format!(
+                r#"SELECT id FROM persons WHERE login=$1 AND password=$2 {} LIMIT 1"#,
+                    organizer_part)[..],
+                &[&login, &password]
+        ),
+        None => conn.query(&format!(
+                r#"SELECT id FROM persons WHERE login=$1 {} LIMIT 1"#,
+                    organizer_part)[..],
+                &[&login]
+        ),
+    }
+    .chain_err(|| "Unable to authorize person")?
+    .iter()
+    .map(|row| row.get("id"))
+    .next()
+    .ok_or_else(|| "NotFound".into())
 }
