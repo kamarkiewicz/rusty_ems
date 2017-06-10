@@ -237,10 +237,11 @@ enum PersonType {
 
 fn authorize_person_as(conn: &Connection, login: String, password: String, person_type: PersonType)
     -> Result<()> {
+    use self::PersonType::*;
     let is_organizer = match person_type {
-        PersonType::Whatever => "",
-        PersonType::Participant => "AND is_organizer=FALSE",
-        PersonType::Organizer => "AND is_organizer=TRUE",
+        Whatever => "",
+        Participant => "AND is_organizer=FALSE",
+        Organizer => "AND is_organizer=TRUE",
     };
     conn.query(&format!(r#"SELECT 1 FROM persons
                            WHERE login=$1 AND password=$2 {}
