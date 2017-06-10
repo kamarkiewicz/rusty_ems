@@ -172,6 +172,93 @@ pub fn register_user_for_event(conn: &PgConnection,
     Ok(())
 }
 
+/// (*U) attendance <login> <password> <talk>
+/// odnotowanie faktycznej obecności uczestnika <login> na referacie <talk>
+
+/// (*U) evaluation <login> <password> <talk> <rating>
+/// ocena referatu <talk> w skali 0-10 przez uczestnika <login>
+
+/// (O) reject <login> <password> <talk>
+/// usuwa referat spontaniczny <talk> z listy zaproponowanych,
+
+/// (U) proposal  <login> <password> <talk> <title> <start_timestamp>
+/// propozycja referatu spontanicznego, <talk> - unikalny identyfikator referatu
+
+/// (U) friends <login1> <password> <login2>
+/// uczestnik <login1> chce nawiązać znajomość z uczestnikiem <login2>, znajomość uznajemy
+/// za nawiązaną jeśli obaj uczestnicy chcą ją nawiązać tj. po wywołaniach
+/// friends <login1> <password1> <login2> i friends <login2> <password2> <login1>
+
+/// (*N) user_plan <login> <limit>
+/// zwraca plan najbliższych referatów z wydarzeń, na które dany uczestnik jest zapisany
+/// (wg rejestracji na wydarzenia) posortowany wg czasu rozpoczęcia,
+/// wypisuje pierwsze <limit> referatów, przy czym 0 oznacza, że należy wypisać wszystkie
+/// Atrybuty zwracanych krotek: 
+///   <login> <talk> <start_timestamp> <title> <room>
+
+/// (*N) day_plan <timestamp>
+/// zwraca listę wszystkich referatów zaplanowanych na dany dzień posortowaną rosnąco wg sal,
+///     w drugiej kolejności wg czasu rozpoczęcia
+///  <talk> <start_timestamp> <title> <room>
+
+/// (*N) best_talks <start_timestamp> <end_timestamp> <limit> <all>
+/// zwraca referaty rozpoczynające się w  danym przedziale czasowym posortowane malejąco
+/// wg średniej oceny uczestników, przy czym jeśli <all> jest równe 1 należy wziąć
+/// pod uwagę wszystkie oceny, w przeciwnym przypadku tylko oceny uczestników, którzy
+/// byli na referacie obecni, wypisuje pierwsze <limit> referatów, przy czym 0 oznacza,
+/// że należy wypisać wszystkie
+///  <talk> <start_timestamp> <title> <room>
+
+/// (*N) most_popular_talks <start_timestamp> <end_timestamp> <limit>
+/// zwraca referaty rozpoczynające się w podanym przedziału czasowego posortowane malejąco
+/// wg obecności, wypisuje pierwsze <limit> referatów, przy czym 0 oznacza,
+/// że należy wypisać wszystkie
+///  <talk> <start_timestamp> <title> <room>
+
+/// (*U) attended_talks <login> <password>
+/// zwraca dla danego uczestnika referaty, na których był obecny 
+///  <talk> <start_timestamp> <title> <room>
+
+/// (*O) abandoned_talks <login> <password>  <limit>
+/// zwraca listę referatów posortowaną malejąco wg liczby uczestników
+/// <number> zarejestrowanych na wydarzenie obejmujące referat,
+/// którzy nie byli na tym referacie obecni, wypisuje pierwsze <limit> referatów,
+/// przy czym 0 oznacza, że należy wypisać wszystkie
+///  <talk> <start_timestamp> <title> <room> <number>
+
+/// (N) recently_added_talks <limit>
+/// zwraca listę ostatnio zarejestrowanych referatów, wypisuje ostatnie <limit> referatów
+/// wg daty zarejestrowania, przy czym 0 oznacza, że należy wypisać wszystkie
+///  <talk> <speakerlogin> <start_timestamp> <title> <room>
+
+/// (U/O) rejected_talks <login> <password>
+/// jeśli wywołujący ma uprawnienia organizatora zwraca listę wszystkich odrzuconych referatów
+/// spontanicznych, w przeciwnym przypadku listę odrzuconych referatów wywołującego ją uczestnika 
+///  <talk> <speakerlogin> <start_timestamp> <title>
+
+/// (O) proposals <login> <password>
+/// zwraca listę propozycji referatów spontanicznych do zatwierdzenia lub odrzucenia,
+/// zatwierdzenie lub odrzucenie referatu polega na wywołaniu przez organizatora
+/// funkcji talk lub reject z odpowiednimi parametrami
+///  <talk> <speakerlogin> <start_timestamp> <title>
+
+/// (U) friends_talks <login> <password> <start_timestamp> <end_timestamp> <limit>
+/// lista referatów  rozpoczynających się w podanym przedziale czasowym wygłaszanych
+/// przez znajomych danego uczestnika posortowana wg czasu rozpoczęcia,
+/// wypisuje pierwsze <limit> referatów, przy czym 0 oznacza, że należy wypisać wszystkie
+///  <talk> <speakerlogin> <start_timestamp> <title> <room>
+
+/// (U) friends_events <login> <password> <eventname>
+/// lista znajomych uczestniczących w danym wydarzeniu
+///  <login> <eventname> <friendlogin> 
+
+/// (U) recommended_talks <login> <password> <start_timestamp> <end_timestamp> <limit>
+/// zwraca referaty rozpoczynające się w podanym przedziale czasowym, które mogą zainteresować
+/// danego uczestnika (zaproponuj parametr <score> obliczany na podstawie dostępnych danych
+/// – ocen, obecności, znajomości itp.), wypisuje pierwsze <limit> referatów wg nalepszego <score>,
+/// przy czym 0 oznacza, że należy wypisać wszystkie
+///  <talk> <speakerlogin> <start_timestamp> <title> <room> <score>
+
 fn authorize_person(conn: &PgConnection, login: String, password: String) -> Result<Person> {
     use schema::persons;
 
