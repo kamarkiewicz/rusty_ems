@@ -161,10 +161,10 @@ pub fn register_user_for_event(conn: &PgConnection,
     use schema::person_registered_for_event;
     use diesel::types::{Bool, Integer};
     let query = sql::<Bool>(
-        r#"INSERT INTO person_registered_for_event(person_id, event_id) VALUES ($1, $2)"#);
-    let query = query
+        r#"INSERT INTO person_registered_for_event(person_id, event_id) VALUES ($1, $2)"#)
         .bind::<Integer, _>(person.id)
         .bind::<Integer, _>(event.id);
+    // eprintln!("{}", debug_sql!(query));
     query
         .execute(conn)
         .chain_err(|| "Person can't be registered for event")?;
