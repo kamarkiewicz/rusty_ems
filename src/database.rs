@@ -128,7 +128,7 @@ pub fn register_or_accept_talk(conn: &PgConnection,
                                initial_evaluation: i16,
                                eventname: String)
                                -> Result<()> {
-    use schema::talks;
+    // use schema::talks;
     // use models::{Talk, NewTalk};
 
     // authorize person as organizer

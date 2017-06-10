@@ -32,3 +32,24 @@ pub struct NewEvent<'a> {
     pub start_timestamp: DateTime,
     pub end_timestamp: DateTime,
 }
+
+// #[derive(Queryable, Identifiable)]
+// pub struct Talk {
+//     pub id: i32,
+//     pub title: String,
+//     pub status: i16,
+//     pub person_id: i32, // speakerlogin
+//     pub event_id: Option<i32>, // eventname
+//     pub start_timestamp: DateTime,
+//     pub room: String,
+//     pub initial_evaluation: i16,
+//     pub eventname: String,
+// }
+
+// #[derive(Insertable)]
+// #[table_name="talks"]
+// pub struct NewTalk<'a> {
+//     pub Talkname: &'a str,
+//     pub start_timestamp: DateTime,
+// }
+
