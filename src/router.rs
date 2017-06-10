@@ -152,7 +152,7 @@ impl Context {
                Request::FriendsEvents {
                    login,
                    password,
-                   event
+                   eventname
                } => { Response::NotImplemented },
 
                Request::RecommendedTalks {

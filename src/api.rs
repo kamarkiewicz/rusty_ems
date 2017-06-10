@@ -12,11 +12,6 @@ mod timestamp_fmt {
 
     const FORMAT: &'static str = "%Y-%m-%d %H:%M:%S";
 
-    // The signature of a serialize_with function must follow the pattern:
-    //
-    //    fn serialize<S>(&T, S) -> Result<S::Ok, S::Error> where S: Serializer
-    //
-    // although it may also be generic over the input types T.
     #[allow(dead_code)]
     pub fn serialize<S>(date: &Timestamp, serializer: S) -> Result<S::Ok, S::Error>
         where S: Serializer
@@ -25,11 +20,6 @@ mod timestamp_fmt {
         serializer.serialize_str(&s)
     }
 
-    // The signature of a deserialize_with function must follow the pattern:
-    //
-    //    fn deserialize<D>(D) -> Result<T, D::Error> where D: Deserializer
-    //
-    // although it may also be generic over the output types T.
     pub fn deserialize<'de, D>(deserializer: D) -> Result<Timestamp, D::Error>
         where D: Deserializer<'de>
     {
@@ -57,7 +47,6 @@ pub enum StrOr<T> {
     Str(String),
     Typ(T),
 }
-
 
 #[derive(Debug, Deserialize, PartialEq)]
 #[serde(rename_all = "snake_case")]
@@ -157,7 +146,7 @@ pub enum Request {
         #[serde(with = "timestamp_fmt")]
         end_timestamp: Timestamp,
         limit: StrOr<u32>,
-        all: String,
+        all: StrOr<u32>,
     },
 
     MostPopularTalks {
@@ -195,16 +184,16 @@ pub enum Request {
     FriendsEvents {
         login: String,
         password: String,
-        event: String,
+        eventname: String,
     },
 
     RecommendedTalks {
         login: String,
         password: String,
-        #[serde(with = "date_fmt")]
-        start_timestamp: Date,
-        #[serde(with = "date_fmt")]
-        end_timestamp: Date,
+        #[serde(with = "timestamp_fmt")]
+        start_timestamp: Timestamp,
+        #[serde(with = "timestamp_fmt")]
+        end_timestamp: Timestamp,
         limit: StrOr<u32>,
     },
 }
