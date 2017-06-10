@@ -3,7 +3,7 @@ use api::*;
 use database::*;
 
 pub struct Context {
-    conn: Option<PgConnection>,
+    conn: Option<Connection>,
 }
 
 #[allow(unused_variables)]
