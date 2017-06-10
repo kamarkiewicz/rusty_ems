@@ -29,6 +29,7 @@ mod timestamp_fmt {
         datetime.or_else(date).map_err(serde::de::Error::custom)
     }
 }
+
 mod date_fmt {
     use super::Date;
     use serde::{self, Deserialize, Deserializer};
@@ -40,6 +41,20 @@ mod date_fmt {
     {
         let s = String::deserialize(deserializer)?;
         Date::parse_from_str(&s, FORMAT).map_err(serde::de::Error::custom)
+    }
+}
+
+mod datetime_fmt {
+    use super::DateTime;
+    use serde::{self, Deserialize, Deserializer};
+
+    const FORMAT: &'static str = "%Y-%m-%d %H:%M:%S";
+
+    pub fn deserialize<'de, D>(deserializer: D) -> Result<DateTime, D::Error>
+        where D: Deserializer<'de>
+    {
+        let s = String::deserialize(deserializer)?;
+        DateTime::parse_from_str(&s, FORMAT).map_err(serde::de::Error::custom)
     }
 }
 
@@ -88,8 +103,8 @@ pub enum Request {
         speakerlogin: String,
         talk: String,
         title: String,
-        #[serde(with = "timestamp_fmt")]
-        start_timestamp: Timestamp,
+        #[serde(with = "datetime_fmt")]
+        start_timestamp: DateTime,
         room: String,
         initial_evaluation: StrOr<i16>,
         eventname: String,
