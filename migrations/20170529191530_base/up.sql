@@ -17,7 +17,7 @@ CREATE TABLE talks (
   title varchar NOT NULL UNIQUE,
 	status smallint NOT NULL,
 	person_id integer NOT NULL REFERENCES persons (id),
-	event_id integer events (id),
+	event_id integer REFERENCES events (id),
 	start_timestamp timestamp NOT NULL,
 	add_timestamp timestamp NOT NULL DEFAULT now()
 );
