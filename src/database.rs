@@ -39,14 +39,7 @@ pub fn create_event(conn: &Connection,
                     end_timestamp: DateTime)
                     -> Result<()> {
     // authorize person as organizer
-    &conn.query(r#"SELECT 1 FROM persons
-                   WHERE login=$1 AND password=$2 AND is_organizer=TRUE
-                   LIMIT 1"#,
-                &[&login, &password])
-         .chain_err(|| "Unable to authorize person")?
-         .iter()
-         .next()
-         .ok_or_else(|| "NotFound")?;
+    authorize_person_as_organizer(conn, login, password)?;
 
     // insert new event
     conn.execute(r#"INSERT INTO events (eventname, start_timestamp, end_timestamp)
@@ -253,21 +246,18 @@ fn attended_talks(conn: &Connection, login: String, password: String) -> Result<
 ///  <talk> <speakerlogin> <start_timestamp> <title> <room> <score>
 fn fff() {}
 
-// fn authorize_person(conn: &Connection, login: String, password: String) -> Result<i32> {
-//     // use schema::persons;
-
-//     // /// SELECT `persons`.`id`, `persons`.`login`, `persons`.`password`, `persons`.`is_organizer`
-//     // /// FROM `persons` WHERE `persons`.`login` = ? AND `persons`.`password` = ? LIMIT ?
-//     // let query = persons::table
-//     //     .filter(persons::login.eq(login))
-//     //     .filter(persons::password.eq(password))
-//     //     .limit(1);
-//     // // eprintln!("{}", debug_sql!(query));
-//     // let authorized_person = query
-//     //     .first::<Person>(conn)
-//     //     .chain_err(|| "Error loading person")?;
-//     Ok(42)
-// }
+fn authorize_person_as_organizer(conn: &Connection, login: String, password: String)
+    -> Result<()> {
+    &conn.query(r#"SELECT 1 FROM persons
+                   WHERE login=$1 AND password=$2 AND is_organizer=TRUE
+                   LIMIT 1"#,
+                &[&login, &password])
+         .chain_err(|| "Unable to authorize person")?
+         .iter()
+         .next()
+         .ok_or_else(|| "NotFound")?;
+    Ok(())
+}
 
 // fn must_have_organizer_rights(person: &Person) -> Result<()> {
 //     if person.is_organizer {
