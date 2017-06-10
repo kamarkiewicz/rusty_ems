@@ -25,8 +25,8 @@ mod timestamp_fmt {
         let s = String::deserialize(deserializer)?;
         let datetime = DateTime::parse_from_str(&s, FORMAT_DATETIME)
             .map(|dt| Timestamp::DateTime(dt));
-        let date = Date::parse_from_str(&s, FORMAT_DATE).map(|d| Timestamp::Date(d));
-        datetime.or(date).map_err(serde::de::Error::custom)
+        let date = |_| Date::parse_from_str(&s, FORMAT_DATE).map(|d| Timestamp::Date(d));
+        datetime.or_else(date).map_err(serde::de::Error::custom)
     }
 }
 mod date_fmt {
