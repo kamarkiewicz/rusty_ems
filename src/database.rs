@@ -56,7 +56,7 @@ pub fn create_event(conn: &PgConnection,
 
     // authorize person as organizer
     let person = authorize_person(&conn, login, password)?;
-    must_have_organizer_rights(person)?;
+    must_have_organizer_rights(&person)?;
 
     // insert new event
     let event = NewEvent {
@@ -90,7 +90,9 @@ pub fn create_user(conn: &PgConnection,
     use schema::persons;
     use models::{Person, NewPerson};
 
-    let _ = authorize_person(&conn, login, password)?;
+    // authorize person as organizer
+    let person = authorize_person(&conn, login, password)?;
+    must_have_organizer_rights(&person)?;
 
     let new_person = NewPerson {
         login: newlogin.as_ref(),
@@ -145,7 +147,7 @@ fn authorize_person(conn: &PgConnection, login: String, password: String) -> Res
     Ok(authorized_person)
 }
 
-fn must_have_organizer_rights(person: Person) -> Result<()> {
+fn must_have_organizer_rights(person: &Person) -> Result<()> {
     if person.is_organizer {
         Ok(())
     } else {
