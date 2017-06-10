@@ -7,12 +7,19 @@ pub use diesel::pg::PgConnection;
 
 use models::Person;
 
+/// (*) open <baza> <login> <password>
+/// przekazuje dane umożliwiające podłączenie Twojego programu do bazy - nazwę bazy,
+/// login oraz hasło, wywoływane dokładnie jeden raz, w pierwszej linii wejścia
+/// zwraca status OK/ERROR w zależności od tego czy udało się nawiązać połączenie z bazą
 pub fn establish_connection(login: String, password: String, baza: String) -> Result<PgConnection> {
     let database_url = format!("postgres://{}:{}@localhost/{}", login, password, baza);
     PgConnection::establish(&database_url)
         .chain_err(|| format!("Error connecting to {}", database_url))
 }
 
+/// (*) organizer <secret> <newlogin> <newpassword>
+/// tworzy uczestnika <newlogin> z uprawnieniami organizatora i hasłem <newpassword>,
+/// argument <secret> musi być równy d8578edf8458ce06fbc5bb76a58c5ca4 // zwraca status OK/ERROR
 pub fn create_organizer_account(conn: &PgConnection,
                                 newlogin: String,
                                 newpassword: String)
@@ -35,6 +42,8 @@ pub fn create_organizer_account(conn: &PgConnection,
     Ok(())
 }
 
+/// (*O) event <login> <password> <eventname> <start_timestamp> <end_timestamp>
+/// rejestracja wydarzenia, napis <eventname> jest unikalny
 pub fn create_event(conn: &PgConnection,
                     login: String,
                     password: String,
@@ -66,6 +75,12 @@ pub fn create_event(conn: &PgConnection,
     Ok(())
 }
 
+/// (*O) user <login> <password> <newlogin> <newpassword>
+/// rejestracja nowego uczestnika
+/// <login> i <password> służą do autoryzacji wywołującego funkcję,
+/// który musi posiadać uprawnienia organizatora,
+/// <newlogin> <newpassword> są danymi nowego uczestnika,
+/// <newlogin> jest unikalny
 pub fn create_user(conn: &PgConnection,
                    login: String,
                    password: String,
