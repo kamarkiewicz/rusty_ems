@@ -37,26 +37,18 @@ pub fn create_event(conn: &Connection,
                     start_timestamp: DateTime,
                     end_timestamp: DateTime)
                     -> Result<()> {
-    // use schema::events;
-    // use models::{Event, NewEvent};
+    // authorize person as organizer
+    &conn.query(r#"SELECT 1 FROM `persons`
+                   WHERE login = $1 AND password = $2 AND is_organizer = TRUE
+                   LIMIT 1"#,
+            &[&login, &password])
+            .chain_err(|| "Error authorizing person")?
+            .iter().next().ok_or_else(|| "NotFound")?;
 
-    // // authorize person as organizer
-    // let person = authorize_person(&conn, login, password)?;
-    // must_have_organizer_rights(&person)?;
-
-    // // insert new event
-    // let event = NewEvent {
-    //     eventname: eventname.as_ref(),
-    //     start_timestamp: start_timestamp,
-    //     end_timestamp: end_timestamp,
-    // };
-
-    // /// INSERT INTO `events` (`eventname`, `start_timestamp`, `end_timestamp`) VALUES (?, ?, ?)
-    // let query = diesel::insert(&event).into(events::table);
-    // // eprintln!("{}", debug_sql!(query));
-    // query
-    //     .get_result::<Event>(conn)
-    //     .chain_err(|| "unable to add event to database")?;
+    // insert new event
+    conn.execute(r#"INSERT INTO `events` (`eventname`, `start_timestamp`, `end_timestamp`)
+                    VALUES (?, ?, ?)"#, &[&eventname, &start_timestamp, &end_timestamp])
+                .chain_err(|| "unable to add event to database")?;
 
     Ok(())
 }

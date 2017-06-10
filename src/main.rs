@@ -23,6 +23,7 @@ mod router;
 // this crate will `use errors::*;` to get access to everything
 // `error_chain!` creates.
 mod errors {
+    use super::postgres;
     use super::std::num;
     use super::std::io;
     use super::serde_json;
@@ -32,6 +33,7 @@ mod errors {
             Io(io::Error);
             Json(serde_json::Error);
             Num(num::ParseIntError);
+            Pg(postgres::error::Error);
         }
     }
 }
