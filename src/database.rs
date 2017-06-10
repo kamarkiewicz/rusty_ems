@@ -22,9 +22,10 @@ pub fn create_organizer_account(conn: &Connection,
                                 newlogin: String,
                                 newpassword: String)
                                 -> Result<()> {
-    conn.execute(r#"INSERT INTO `persons` (`login`, `password`, `is_organizer`)
-                    VALUES ($1, $2, TRUE)"#, &[&newlogin, &newpassword])
-                 .chain_err(|| "unable to add organizer person to database")?;
+    conn.execute(r#"INSERT INTO persons (login, password, is_organizer)
+                    VALUES ($1, $2, TRUE)"#,
+                 &[&newlogin, &newpassword])
+        .chain_err(|| "Unable to insert organizer person")?;
     Ok(())
 }
 
@@ -38,17 +39,20 @@ pub fn create_event(conn: &Connection,
                     end_timestamp: DateTime)
                     -> Result<()> {
     // authorize person as organizer
-    &conn.query(r#"SELECT 1 FROM `persons`
-                   WHERE login = $1 AND password = $2 AND is_organizer = TRUE
+    &conn.query(r#"SELECT 1 FROM persons
+                   WHERE login=$1 AND password=$2 AND is_organizer=TRUE
                    LIMIT 1"#,
-            &[&login, &password])
-            .chain_err(|| "Error authorizing person")?
-            .iter().next().ok_or_else(|| "NotFound")?;
+                &[&login, &password])
+         .chain_err(|| "Unable to authorize person")?
+         .iter()
+         .next()
+         .ok_or_else(|| "NotFound")?;
 
     // insert new event
-    conn.execute(r#"INSERT INTO `events` (`eventname`, `start_timestamp`, `end_timestamp`)
-                    VALUES (?, ?, ?)"#, &[&eventname, &start_timestamp, &end_timestamp])
-                .chain_err(|| "unable to add event to database")?;
+    conn.execute(r#"INSERT INTO events (eventname, start_timestamp, end_timestamp)
+                    VALUES ($1, $2, $3)"#,
+                 &[&eventname, &start_timestamp, &end_timestamp])
+        .chain_err(|| "Unable to insert event")?;
 
     Ok(())
 }
@@ -169,7 +173,7 @@ pub fn register_user_for_event(conn: &Connection,
 /// zwraca plan najbliższych referatów z wydarzeń, na które dany uczestnik jest zapisany
 /// (wg rejestracji na wydarzenia) posortowany wg czasu rozpoczęcia,
 /// wypisuje pierwsze <limit> referatów, przy czym 0 oznacza, że należy wypisać wszystkie
-/// Atrybuty zwracanych krotek: 
+/// Atrybuty zwracanych krotek:
 ///   <login> <talk> <start_timestamp> <title> <room>
 
 /// (*N) day_plan <timestamp>
@@ -192,12 +196,9 @@ pub fn register_user_for_event(conn: &Connection,
 ///  <talk> <start_timestamp> <title> <room>
 
 /// (*U) attended_talks <login> <password>
-/// zwraca dla danego uczestnika referaty, na których był obecny 
+/// zwraca dla danego uczestnika referaty, na których był obecny
 ///  <talk> <start_timestamp> <title> <room>
-fn attended_talks(conn: &Connection,
-                  login: String,
-                  password: String)
-                  -> Result<()> {
+fn attended_talks(conn: &Connection, login: String, password: String) -> Result<()> {
     // let person = authorize_person(&conn, login, password)?;
 
     // use schema::{person_attended_for_talk, talks};
@@ -225,7 +226,7 @@ fn attended_talks(conn: &Connection,
 
 /// (U/O) rejected_talks <login> <password>
 /// jeśli wywołujący ma uprawnienia organizatora zwraca listę wszystkich odrzuconych referatów
-/// spontanicznych, w przeciwnym przypadku listę odrzuconych referatów wywołującego ją uczestnika 
+/// spontanicznych, w przeciwnym przypadku listę odrzuconych referatów wywołującego ją uczestnika
 ///  <talk> <speakerlogin> <start_timestamp> <title>
 
 /// (O) proposals <login> <password>
@@ -242,7 +243,7 @@ fn attended_talks(conn: &Connection,
 
 /// (U) friends_events <login> <password> <eventname>
 /// lista znajomych uczestniczących w danym wydarzeniu
-///  <login> <eventname> <friendlogin> 
+///  <login> <eventname> <friendlogin>
 
 /// (U) recommended_talks <login> <password> <start_timestamp> <end_timestamp> <limit>
 /// zwraca referaty rozpoczynające się w podanym przedziale czasowym, które mogą zainteresować
