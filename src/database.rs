@@ -17,6 +17,12 @@ pub fn establish_connection(login: String, password: String, baza: String) -> Re
         .chain_err(|| format!("Error connecting to {}", database_url))
 }
 
+/// Sprawdza, czy połączona baza zawiera odpowiednią strukturę tabel.
+/// Przeprowadza migrację jeśli jest taka potrzeba.
+pub fn setup_database(conn: &Connection) -> Result<()> {
+    Ok(())
+}
+
 /// (*) organizer <secret> <newlogin> <newpassword>
 /// tworzy uczestnika <newlogin> z uprawnieniami organizatora i hasłem <newpassword>,
 /// argument <secret> musi być równy d8578edf8458ce06fbc5bb76a58c5ca4 // zwraca status OK/ERROR
@@ -582,7 +588,7 @@ pub fn abandoned_talks(conn: &Connection,
           SELECT talk_id, count(person_id)
           FROM person_registered_for_talk
           WHERE (person_id, talk_id) NOT IN (SELECT * FROM person_attended_for_talk)
-          GROUP BY talk_id 
+          GROUP BY talk_id
         )
         SELECT talk, start_timestamp, title, room, absent
         FROM talks

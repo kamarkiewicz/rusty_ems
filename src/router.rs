@@ -21,6 +21,7 @@ impl Context {
                    baza,
                } => {
                    self.conn = Some(establish_connection(login, password, baza)?);
+                   setup_database(self.conn.as_ref().unwrap())?;
                    Response::Ok(ResponseInfo::Empty)
                },
 
