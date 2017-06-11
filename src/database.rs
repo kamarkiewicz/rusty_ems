@@ -321,6 +321,7 @@ pub fn user_plan(conn: &Connection, login: String, limit: u32) -> Result<Vec<Use
     };
 
     let status: i16 = TalkStatus::Accepted.into();
+    // TODO: FIX THIS QUERY
     let query = format!(r#"
             SELECT persons.login as login, talk, talks.start_timestamp, title, room
             FROM person_registered_for_event prfe
