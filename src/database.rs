@@ -24,7 +24,7 @@ pub fn create_organizer_account(conn: &Connection,
                                 newlogin: String,
                                 newpassword: String)
                                 -> Result<()> {
-    
+
     let query = r#"
         INSERT INTO persons (login, password, is_organizer)
         VALUES ($1, $2, TRUE)"#;
@@ -128,7 +128,9 @@ pub fn register_or_accept_talk(conn: &Connection,
             .map(|row| row.get("id"))
             .next()
             .ok_or_else(|| format!("event with eventname=`{}` not found", eventname))?
-    } else { None };
+    } else {
+        None
+    };
     let status: i16 = TalkStatus::Accepted.into();
 
     // TODO: handle accepting the proposal
@@ -138,7 +140,13 @@ pub fn register_or_accept_talk(conn: &Connection,
         VALUES ($1, $2, $3, $4, $5, $6, $7)
         RETURNING id"#;
     let talk_id: i32 = conn.query(query,
-        &[&speaker_id, &talk, &status, &title, &start_timestamp, &room, &event_id])
+                                  &[&speaker_id,
+                                    &talk,
+                                    &status,
+                                    &title,
+                                    &start_timestamp,
+                                    &room,
+                                    &event_id])
         .chain_err(|| "Unable to insert a talk")?
         .iter()
         .map(|row| row.get("id"))
@@ -149,8 +157,7 @@ pub fn register_or_accept_talk(conn: &Connection,
     let query = r#"
         INSERT INTO person_rated_talk (person_id, talk_id, rating)
         VALUES ($1, $2, $3)"#;
-    conn.execute(query,
-                 &[&person_id, &talk_id, &initial_evaluation])
+    conn.execute(query, &[&person_id, &talk_id, &initial_evaluation])
         .chain_err(|| "Unable to evaluate the talk")?;
 
 
@@ -164,7 +171,7 @@ pub fn register_user_for_event(conn: &Connection,
                                password: String,
                                eventname: String)
                                -> Result<()> {
-    
+
     let person_id = authorize_person_as(conn, &login, Some(&password), PersonType::User)?;
 
     let query = r#"
@@ -189,7 +196,7 @@ pub fn register_user_for_event(conn: &Connection,
 /// (*U) attendance <login> <password> <talk>
 /// odnotowanie faktycznej obecności uczestnika <login> na referacie <talk>
 pub fn attendance(conn: &Connection, login: String, password: String, talk: String) -> Result<()> {
-    
+
     let person_id = authorize_person_as(conn, &login, Some(&password), PersonType::User)?;
 
     let query = r#"
@@ -282,7 +289,8 @@ pub fn propose_spontaneous_talk(conn: &Connection,
     let query = r#"
         INSERT INTO talks (speaker_id, talk, status, title, start_timestamp)
         VALUES ($1, $2, $3, $4, $5)"#;
-    conn.execute(query, &[&speaker_id, &talk, &status, &title, &start_timestamp])
+    conn.execute(query,
+                 &[&speaker_id, &talk, &status, &title, &start_timestamp])
         .chain_err(|| "Unable to insert a proposal")?;
 
     Ok(())
@@ -369,13 +377,13 @@ pub fn day_plan(conn: &Connection, date: Date) -> Result<Vec<DayPlan>> {
         .chain_err(|| "Unable to load day plan")?
         .iter()
         .map(|row| {
-            DayPlan {
-                talk: row.get("talk"),
-                start_timestamp: row.get("start_timestamp"),
-                title: row.get("title"),
-                room: row.get("room"),
-            }
-        })
+                 DayPlan {
+                     talk: row.get("talk"),
+                     start_timestamp: row.get("start_timestamp"),
+                     title: row.get("title"),
+                     room: row.get("room"),
+                 }
+             })
         .collect();
 
     Ok(plans)
@@ -422,13 +430,13 @@ pub fn best_talks(conn: &Connection,
         .chain_err(|| "Unable to load day plan")?
         .iter()
         .map(|row| {
-            BestTalk {
-                talk: row.get("talk"),
-                start_timestamp: row.get("start_timestamp"),
-                title: row.get("title"),
-                room: row.get("room"),
-            }
-        })
+                 BestTalk {
+                     talk: row.get("talk"),
+                     start_timestamp: row.get("start_timestamp"),
+                     title: row.get("title"),
+                     room: row.get("room"),
+                 }
+             })
         .collect();
 
     Ok(talks)
@@ -462,13 +470,13 @@ pub fn most_popular_talks(conn: &Connection,
         .chain_err(|| "Unable to load day plan")?
         .iter()
         .map(|row| {
-            MostPopularTalk {
-                talk: row.get("talk"),
-                start_timestamp: row.get("start_timestamp"),
-                title: row.get("title"),
-                room: row.get("room"),
-            }
-        })
+                 MostPopularTalk {
+                     talk: row.get("talk"),
+                     start_timestamp: row.get("start_timestamp"),
+                     title: row.get("title"),
+                     room: row.get("room"),
+                 }
+             })
         .collect();
 
     Ok(talks)
@@ -492,13 +500,13 @@ pub fn attended_talks(conn: &Connection,
         .chain_err(|| "Unable to load person's talks")?
         .iter()
         .map(|row| {
-            AttendedTalk {
-                talk: row.get("talk"),
-                start_timestamp: row.get("start_timestamp"),
-                title: row.get("title"),
-                room: row.get("room"),
-            }
-        })
+                 AttendedTalk {
+                     talk: row.get("talk"),
+                     start_timestamp: row.get("start_timestamp"),
+                     title: row.get("title"),
+                     room: row.get("room"),
+                 }
+             })
         .collect();
 
     Ok(talks)
@@ -590,7 +598,6 @@ enum PersonType {
     Organizer,
 }
 
-#[cfg_attr(rustfmt, rustfmt_skip)]
 fn authorize_person_as(conn: &Connection,
                        login: &str,
                        password: Option<&str>,
