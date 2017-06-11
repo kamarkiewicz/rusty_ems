@@ -1,6 +1,6 @@
 use errors::*;
 
-use api::{DateTime, AttendedTalk, UserPlan};
+use api::{Date, DateTime, AttendedTalk, UserPlan, DayPlan};
 
 pub use postgres::{Connection, TlsMode};
 
@@ -347,11 +347,34 @@ pub fn user_plan(conn: &Connection, login: String, limit: u32) -> Result<Vec<Use
     Ok(user_plans)
 }
 
-
 /// (*N) day_plan <timestamp>
 /// zwraca listę wszystkich referatów zaplanowanych na dany dzień posortowaną rosnąco wg sal,
 ///     w drugiej kolejności wg czasu rozpoczęcia
 ///  <talk> <start_timestamp> <title> <room>
+pub fn day_plan(conn: &Connection, date: Date) -> Result<Vec<DayPlan>> {
+
+    let query = r#"
+            SELECT persons.login as login, talk, talks.start_timestamp, title, room
+            FROM person_registered_for_event prfe
+                JOIN events ON prfe.event_id=events.id
+                JOIN talks ON events.id=talks.event_id
+                JOIN persons ON speaker_id=persons.id
+            WHERE prfe.person_id = $1 AND talks.status = $2 {}"#;
+    let day_plans: Vec<_> = conn.query(&query[..], &[&date])
+        .chain_err(|| "Unable to load day plan")?
+        .iter()
+        .map(|row| {
+            DayPlan {
+                talk: row.get("talk"),
+                start_timestamp: row.get("start_timestamp"),
+                title: row.get("title"),
+                room: row.get("room"),
+            }
+        })
+        .collect();
+
+    Ok(day_plans)
+}
 
 /// (*N) best_talks <start_timestamp> <end_timestamp> <limit> <all>
 /// zwraca referaty rozpoczynające się w  danym przedziale czasowym posortowane malejąco

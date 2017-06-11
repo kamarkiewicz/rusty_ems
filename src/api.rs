@@ -247,6 +247,7 @@ pub enum Response {
 pub enum ResponseInfo {
     AttendedTalks(Vec<AttendedTalk>),
     UserPlans(Vec<UserPlan>),
+    DayPlans(Vec<DayPlan>),
     Empty,
 }
 
@@ -262,6 +263,15 @@ pub struct AttendedTalk {
 #[derive(Debug, Serialize, PartialEq)]
 pub struct UserPlan {
     pub login: String,
+    pub talk: String,
+    #[serde(with = "datetime_fmt")]
+    pub start_timestamp: DateTime,
+    pub title: String,
+    pub room: String,
+}
+
+#[derive(Debug, Serialize, PartialEq)]
+pub struct DayPlan {
     pub talk: String,
     #[serde(with = "datetime_fmt")]
     pub start_timestamp: DateTime,

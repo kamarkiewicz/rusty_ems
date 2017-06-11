@@ -174,7 +174,12 @@ impl Context {
                    Response::Ok(ResponseInfo::UserPlans(user_plans))
                },
 
-               Request::DayPlan { timestamp } => { Response::NotImplemented },
+               Request::DayPlan { timestamp } => {
+                   let conn = self.conn.as_ref().ok_or("establish connection first")?;
+                   let day_plans = day_plan(&conn, timestamp)
+                        .chain_err(|| "during Request::DayPlan")?;
+                   Response::Ok(ResponseInfo::DayPlans(day_plans))
+               },
 
                Request::BestTalks {
                    start_timestamp,
