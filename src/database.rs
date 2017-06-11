@@ -353,24 +353,23 @@ pub fn user_plan(conn: &Connection, login: String, limit: u32) -> Result<Vec<Use
 ///  <talk> <start_timestamp> <title> <room>
 pub fn day_plan(conn: &Connection, date: Date) -> Result<Vec<DayPlan>> {
 
+    let status: i16 = TalkStatus::Accepted.into();
     let query = r#"
-            SELECT persons.login as login, talk, talks.start_timestamp, title, room
-            FROM person_registered_for_event prfe
-                JOIN events ON prfe.event_id=events.id
-                JOIN talks ON events.id=talks.event_id
-                JOIN persons ON speaker_id=persons.id
-            WHERE prfe.person_id = $1 AND talks.status = $2 {}"#;
-    let day_plans: Vec<_> = conn.query(&query[..], &[&date])
+            SELECT talk, start_timestamp, title, room
+            FROM talks
+            WHERE status = $1 AND start_timestamp::date = $2
+            ORDER BY room, start_timestamp"#;
+    let day_plans: Vec<_> = conn.query(&query[..], &[&status, &date])
         .chain_err(|| "Unable to load day plan")?
         .iter()
         .map(|row| {
-            DayPlan {
-                talk: row.get("talk"),
-                start_timestamp: row.get("start_timestamp"),
-                title: row.get("title"),
-                room: row.get("room"),
-            }
-        })
+                 DayPlan {
+                     talk: row.get("talk"),
+                     start_timestamp: row.get("start_timestamp"),
+                     title: row.get("title"),
+                     room: row.get("room"),
+                 }
+             })
         .collect();
 
     Ok(day_plans)
