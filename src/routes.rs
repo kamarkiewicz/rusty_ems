@@ -85,8 +85,8 @@ impl Context {
                    let conn = self.conn.as_ref().ok_or("establish connection first")?;
                    let initial_evaluation = initial_evaluation.validate()?;
                    if 0 > initial_evaluation || initial_evaluation > 10 {
-                       return Err("initial_evaluation must be in range 0-10".into());
-                   };
+                       bail!("initial_evaluation must be in range 0-10")
+                   }
                    register_or_accept_talk(&conn, login, password,
                    speakerlogin, talk, title, start_timestamp, room,
                    initial_evaluation, eventname)
@@ -125,8 +125,8 @@ impl Context {
                    let conn = self.conn.as_ref().ok_or("establish connection first")?;
                    let rating = rating.validate()?;
                    if 0 > rating || rating > 10 {
-                       return Err("rating must be in range 0-10".into());
-                   };
+                       bail!("rating must be in range 0-10")
+                   }
                    evaluation(&conn, login, password, talk, rating)
                         .chain_err(|| "during Request::Evaluation")?;
                    Response::Ok(ResponseInfo::Empty)

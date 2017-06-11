@@ -141,23 +141,25 @@ pub fn register_or_accept_talk(conn: &Connection,
 
     // upsert a talk
     let query = r#"
-        INSERT INTO talks (speaker_id, talk, status, title, start_timestamp, room, event_id)
+        INSERT INTO talks (talk, speaker_id, status, title, start_timestamp, room, event_id)
         VALUES ($1, $2, $3, $4, $5, $6, $7)
-        ON CONFLICT (talk)
-        DO UPDATE SET
+        ON CONFLICT (talk) DO UPDATE SET
+          speaker_id = EXCLUDED.speaker_id,
           status = EXCLUDED.status,
+          title = EXCLUDED.title,
+          start_timestamp = EXCLUDED.start_timestamp,
           room = EXCLUDED.room,
           event_id = EXCLUDED.event_id
         RETURNING id"#;
     let talk_id: i32 = conn.query(query,
-                                  &[&speaker_id,
-                                    &talk,
+                                  &[&talk,
+                                    &speaker_id,
                                     &status,
                                     &title,
                                     &start_timestamp,
                                     &room,
                                     &event_id])
-        .chain_err(|| "Unable to insert a talk")?
+        .chain_err(|| "Unable to upsert a talk")?
         .iter()
         .map(|row| row.get("id"))
         .next()
@@ -169,7 +171,6 @@ pub fn register_or_accept_talk(conn: &Connection,
         VALUES ($1, $2, $3)"#;
     conn.execute(query, &[&person_id, &talk_id, &initial_evaluation])
         .chain_err(|| "Unable to evaluate the talk")?;
-
 
     Ok(())
 }
@@ -285,12 +286,11 @@ pub fn reject_spontaneous_talk(conn: &Connection,
           AND status = $3"#;
     let updates = conn.execute(query, &[&rejected, &talk, &proposed])
         .chain_err(|| "Unable to reject a proposal")?;
-
-    if updates == 1 {
-        Ok(())
-    } else {
-        Err("There was no proposal to reject".into())
+    if updates != 1 {
+        bail!("There was no proposal to reject")
     }
+
+    Ok(())
 }
 
 /// (U) proposal <login> <password> <talk> <title> <start_timestamp>
@@ -355,8 +355,8 @@ pub fn user_plan(conn: &Connection, login: String, limit: u32) -> Result<Vec<Use
 
     let status: i16 = TalkStatus::Accepted.into();
     let query = format!(r#"
-        WITH cte AS (
-          SELECT person_id, login as speakerlogin, talk, start_timestamp, title, room
+        WITH cte(person_id, speakerlogin, talk, start_timestamp, title, room) AS (
+          SELECT person_id, login, talk, start_timestamp, title, room
           FROM person_registered_for_event prfe
             JOIN talks USING(event_id)
             JOIN persons speakers ON speaker_id=speakers.id
@@ -496,14 +496,14 @@ pub fn most_popular_talks(conn: &Connection,
         format!("LIMIT {}", limit)
     };
     let query = format!(r#"
-        WITH cte AS (
-          SELECT talk_id AS id, COUNT(person_id) AS arrivals
+        WITH cte(talk_id, arrivals) AS (
+          SELECT talk_id, COUNT(person_id)
           FROM person_attended_for_talk
           GROUP BY talk_id
         )
         SELECT talk, start_timestamp, title, room
         FROM talks
-          JOIN cte USING(id)
+          JOIN cte ON cte.talk_id = talks.id
         WHERE status = $1
           AND start_timestamp >= $2
           AND start_timestamp <= $3

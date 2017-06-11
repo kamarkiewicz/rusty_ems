@@ -15,9 +15,8 @@ extern crate serde_json;
 extern crate postgres;
 
 mod api;
-mod models;
 mod database;
-mod router;
+mod routes;
 
 // We'll put our errors in an `errors` module, and other modules in
 // this crate will `use errors::*;` to get access to everything
@@ -44,7 +43,7 @@ mod errors {
 pub use errors::*;
 
 use api::*;
-use router::Context;
+use routes::Context;
 
 // Use this macro to auto-generate the main. You may want to
 // set the `RUST_BACKTRACE` env variable to see a backtrace.
