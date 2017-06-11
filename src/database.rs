@@ -24,11 +24,13 @@ pub fn create_organizer_account(conn: &Connection,
                                 newlogin: String,
                                 newpassword: String)
                                 -> Result<()> {
-    conn.execute(r#"
-            INSERT INTO persons (login, password, is_organizer)
-            VALUES ($1, $2, TRUE)"#,
-                 &[&newlogin, &newpassword])
+    
+    let query = r#"
+        INSERT INTO persons (login, password, is_organizer)
+        VALUES ($1, $2, TRUE)"#;
+    conn.execute(query, &[&newlogin, &newpassword])
         .chain_err(|| "Unable to insert organizer person")?;
+
     Ok(())
 }
 
@@ -41,13 +43,14 @@ pub fn create_event(conn: &Connection,
                     start_timestamp: DateTime,
                     end_timestamp: DateTime)
                     -> Result<()> {
+
     authorize_person_as(conn, &login, Some(&password), PersonType::Organizer)?;
 
     // insert new event
-    conn.execute(r#"
-            INSERT INTO events (eventname, start_timestamp, end_timestamp)
-            VALUES ($1, $2, $3)"#,
-                 &[&eventname, &start_timestamp, &end_timestamp])
+    let query = r#"
+        INSERT INTO events (eventname, start_timestamp, end_timestamp)
+        VALUES ($1, $2, $3)"#;
+    conn.execute(query, &[&eventname, &start_timestamp, &end_timestamp])
         .chain_err(|| "Unable to insert event")?;
 
     Ok(())
@@ -65,13 +68,14 @@ pub fn create_user(conn: &Connection,
                    newlogin: String,
                    newpassword: String)
                    -> Result<()> {
+
     authorize_person_as(conn, &login, Some(&password), PersonType::Organizer)?;
 
     // insert new person
-    conn.execute(r#"
-            INSERT INTO persons (login, password, is_organizer)
-            VALUES ($1, $2, FALSE)"#,
-                 &[&newlogin, &newpassword])
+    let query = r#"
+        INSERT INTO persons (login, password, is_organizer)
+        VALUES ($1, $2, FALSE)"#;
+    conn.execute(query, &[&newlogin, &newpassword])
         .chain_err(|| "Unable to insert User person")?;
 
     Ok(())
@@ -113,37 +117,28 @@ pub fn register_or_accept_talk(conn: &Connection,
                                initial_evaluation: i16,
                                eventname: String)
                                -> Result<()> {
+
     let person_id = authorize_person_as(conn, &login, Some(&password), PersonType::Organizer)?;
-
     let speaker_id = authorize_person_as(conn, &speakerlogin, None, PersonType::Whatever)?;
-
-    let event_id: Option<i32> = if eventname.is_empty() {
-        None
-    } else {
-        conn.query(r#"
-            SELECT id FROM events WHERE eventname=$1 LIMIT 1"#,
-                   &[&eventname])
+    let event_id: Option<i32> = if !eventname.is_empty() {
+        let query = r#"SELECT id FROM events WHERE eventname=$1 LIMIT 1"#;
+        conn.query(query, &[&eventname])
             .chain_err(|| "Unable to load event")?
             .iter()
             .map(|row| row.get("id"))
             .next()
             .ok_or_else(|| format!("event with eventname=`{}` not found", eventname))?
-    };
+    } else { None };
+    let status: i16 = TalkStatus::Accepted.into();
 
     // TODO: handle accepting the proposal
     // insert a new talk
-    let status: i16 = TalkStatus::Accepted.into();
-    let talk_id: i32 = conn.query(r#"
-            INSERT INTO talks (speaker_id, talk, status, title, start_timestamp, room, event_id)
-            VALUES ($1, $2, $3, $4, $5, $6, $7)
-            RETURNING id"#,
-                                  &[&speaker_id,
-                                    &talk,
-                                    &status,
-                                    &title,
-                                    &start_timestamp,
-                                    &room,
-                                    &event_id])
+    let query = r#"
+        INSERT INTO talks (speaker_id, talk, status, title, start_timestamp, room, event_id)
+        VALUES ($1, $2, $3, $4, $5, $6, $7)
+        RETURNING id"#;
+    let talk_id: i32 = conn.query(query,
+        &[&speaker_id, &talk, &status, &title, &start_timestamp, &room, &event_id])
         .chain_err(|| "Unable to insert a talk")?
         .iter()
         .map(|row| row.get("id"))
@@ -151,9 +146,10 @@ pub fn register_or_accept_talk(conn: &Connection,
         .ok_or_else(|| format!("talk with talk=`{}` not found", talk))?;
 
     // initial evaluation
-    conn.execute(r#"
-            INSERT INTO person_rated_talk (person_id, talk_id, rating)
-            VALUES ($1, $2, $3)"#,
+    let query = r#"
+        INSERT INTO person_rated_talk (person_id, talk_id, rating)
+        VALUES ($1, $2, $3)"#;
+    conn.execute(query,
                  &[&person_id, &talk_id, &initial_evaluation])
         .chain_err(|| "Unable to evaluate the talk")?;
 
@@ -168,22 +164,23 @@ pub fn register_user_for_event(conn: &Connection,
                                password: String,
                                eventname: String)
                                -> Result<()> {
+    
     let person_id = authorize_person_as(conn, &login, Some(&password), PersonType::User)?;
 
+    let query = r#"
+        SELECT id FROM events WHERE eventname=$1 LIMIT 1"#;
     let event_id: i32 =
-        conn.query(r#"
-            SELECT id FROM events WHERE eventname=$1 LIMIT 1"#,
-                   &[&eventname])
+        conn.query(query, &[&eventname])
             .chain_err(|| "Unable to load event")?
             .iter()
             .map(|row| row.get("id"))
             .next()
             .ok_or_else(|| format!("event with eventname=`{}` not found", eventname))?;
 
-    conn.execute(r#"
-            INSERT INTO person_registered_for_event (person_id, event_id)
-            VALUES ($1, $2)"#,
-                 &[&person_id, &event_id])
+    let query = r#"
+        INSERT INTO person_registered_for_event (person_id, event_id)
+        VALUES ($1, $2)"#;
+    conn.execute(query, &[&person_id, &event_id])
         .chain_err(|| "Person can't be registered for event")?;
 
     Ok(())
@@ -192,21 +189,22 @@ pub fn register_user_for_event(conn: &Connection,
 /// (*U) attendance <login> <password> <talk>
 /// odnotowanie faktycznej obecności uczestnika <login> na referacie <talk>
 pub fn attendance(conn: &Connection, login: String, password: String, talk: String) -> Result<()> {
+    
     let person_id = authorize_person_as(conn, &login, Some(&password), PersonType::User)?;
 
-    let talk_id: i32 = conn.query(r#"
-            SELECT id FROM talks WHERE talk=$1 LIMIT 1"#,
-                                  &[&talk])
+    let query = r#"
+        SELECT id FROM talks WHERE talk=$1 LIMIT 1"#;
+    let talk_id: i32 = conn.query(query, &[&talk])
         .chain_err(|| "Unable to load the talk")?
         .iter()
         .map(|row| row.get("id"))
         .next()
         .ok_or_else(|| format!("talk with talk=`{}` not found", talk))?;
 
-    conn.execute(r#"
-            INSERT INTO person_attended_for_talk (person_id, talk_id)
-            VALUES ($1, $2)"#,
-                 &[&person_id, &talk_id])
+    let query = r#"
+        INSERT INTO person_attended_for_talk (person_id, talk_id)
+        VALUES ($1, $2)"#;
+    conn.execute(query, &[&person_id, &talk_id])
         .chain_err(|| "Unable to mark attendance of User for the talk")?;
 
     Ok(())
@@ -220,21 +218,22 @@ pub fn evaluation(conn: &Connection,
                   talk: String,
                   rating: i16)
                   -> Result<()> {
+
     let person_id = authorize_person_as(conn, &login, Some(&password), PersonType::User)?;
 
-    let talk_id: i32 = conn.query(r#"
-            SELECT id FROM talks WHERE talk=$1 LIMIT 1"#,
-                                  &[&talk])
+    let query = r#"
+        SELECT id FROM talks WHERE talk=$1 LIMIT 1"#;
+    let talk_id: i32 = conn.query(query, &[&talk])
         .chain_err(|| "Unable to load the talk")?
         .iter()
         .map(|row| row.get("id"))
         .next()
         .ok_or_else(|| format!("talk with talk=`{}` not found", talk))?;
 
-    conn.execute(r#"
-            INSERT INTO person_rated_talk (person_id, talk_id, rating)
-            VALUES ($1, $2, $3)"#,
-                 &[&person_id, &talk_id, &rating])
+    let query = r#"
+        INSERT INTO person_rated_talk (person_id, talk_id, rating)
+        VALUES ($1, $2, $3)"#;
+    conn.execute(query, &[&person_id, &talk_id, &rating])
         .chain_err(|| "Unable to evaluate the talk")?;
 
     Ok(())
@@ -247,15 +246,16 @@ pub fn reject_spontaneous_talk(conn: &Connection,
                                password: String,
                                talk: String)
                                -> Result<()> {
+
     authorize_person_as(conn, &login, Some(&password), PersonType::Organizer)?;
 
     let rejected: i16 = TalkStatus::Rejected.into();
     let proposed: i16 = TalkStatus::Proposed.into();
 
     // update a proposal
-    let updates = conn.execute(r#"
-            UPDATE talks SET status = $1 WHERE talk = $2 AND status = $3"#,
-                               &[&rejected, &talk, &proposed])
+    let query = r#"
+        UPDATE talks SET status = $1 WHERE talk = $2 AND status = $3"#;
+    let updates = conn.execute(query, &[&rejected, &talk, &proposed])
         .chain_err(|| "Unable to reject a proposal")?;
 
     if updates == 1 {
@@ -274,14 +274,15 @@ pub fn propose_spontaneous_talk(conn: &Connection,
                                 title: String,
                                 start_timestamp: DateTime)
                                 -> Result<()> {
+
     let speaker_id = authorize_person_as(conn, &login, Some(&password), PersonType::User)?;
     let status: i16 = TalkStatus::Proposed.into();
 
     // insert a new proposal
-    conn.execute(r#"
-            INSERT INTO talks (speaker_id, talk, status, title, start_timestamp)
-            VALUES ($1, $2, $3, $4, $5)"#,
-                 &[&speaker_id, &talk, &status, &title, &start_timestamp])
+    let query = r#"
+        INSERT INTO talks (speaker_id, talk, status, title, start_timestamp)
+        VALUES ($1, $2, $3, $4, $5)"#;
+    conn.execute(query, &[&speaker_id, &talk, &status, &title, &start_timestamp])
         .chain_err(|| "Unable to insert a proposal")?;
 
     Ok(())
@@ -296,13 +297,14 @@ pub fn make_friends(conn: &Connection,
                     password: String,
                     login2: String)
                     -> Result<()> {
+
     let person1_id = authorize_person_as(conn, &login1, Some(&password), PersonType::User)?;
     let person2_id = authorize_person_as(conn, &login2, None, PersonType::User)?;
 
-    conn.execute(r#"
+    let query = r#"
             INSERT INTO person_knows_person (person1_id, person2_id)
-            VALUES ($1, $2)"#,
-                 &[&person1_id, &person2_id])
+            VALUES ($1, $2)"#;
+    conn.execute(query, &[&person1_id, &person2_id])
         .chain_err(|| "These Users cannot be friends")?;
 
     Ok(())
@@ -315,6 +317,7 @@ pub fn make_friends(conn: &Connection,
 /// Atrybuty zwracanych krotek:
 ///   <login> <talk> <start_timestamp> <title> <room>
 pub fn user_plan(conn: &Connection, login: String, limit: u32) -> Result<Vec<UserPlan>> {
+
     let person_id = authorize_person_as(conn, &login, None, PersonType::Whatever)?;
 
     let limit = if limit == 0 {
@@ -326,12 +329,12 @@ pub fn user_plan(conn: &Connection, login: String, limit: u32) -> Result<Vec<Use
     let status: i16 = TalkStatus::Accepted.into();
     // TODO: FIX THIS QUERY
     let query = format!(r#"
-            SELECT persons.login as login, talk, talks.start_timestamp, title, room
-            FROM person_registered_for_event prfe
-                JOIN events ON prfe.event_id=events.id
-                JOIN talks ON events.id=talks.event_id
-                JOIN persons ON speaker_id=persons.id
-            WHERE prfe.person_id = $1 AND talks.status = $2 {}"#,
+        SELECT persons.login as login, talk, talks.start_timestamp, title, room
+        FROM person_registered_for_event prfe
+            JOIN events ON prfe.event_id=events.id
+            JOIN talks ON events.id=talks.event_id
+            JOIN persons ON speaker_id=persons.id
+        WHERE prfe.person_id = $1 AND talks.status = $2 {}"#,
                         limit);
     let plans: Vec<_> = conn.query(&query[..], &[&person_id, &status])
         .chain_err(|| "Unable to load person's plan")?
@@ -358,21 +361,21 @@ pub fn day_plan(conn: &Connection, date: Date) -> Result<Vec<DayPlan>> {
 
     let status: i16 = TalkStatus::Accepted.into();
     let query = r#"
-            SELECT talk, start_timestamp, title, room
-            FROM talks
-            WHERE status = $1 AND start_timestamp::date = $2
-            ORDER BY room, start_timestamp"#;
+        SELECT talk, start_timestamp, title, room
+        FROM talks
+        WHERE status = $1 AND start_timestamp::date = $2
+        ORDER BY room, start_timestamp"#;
     let plans: Vec<_> = conn.query(&query[..], &[&status, &date])
         .chain_err(|| "Unable to load day plan")?
         .iter()
         .map(|row| {
-                 DayPlan {
-                     talk: row.get("talk"),
-                     start_timestamp: row.get("start_timestamp"),
-                     title: row.get("title"),
-                     room: row.get("room"),
-                 }
-             })
+            DayPlan {
+                talk: row.get("talk"),
+                start_timestamp: row.get("start_timestamp"),
+                title: row.get("title"),
+                room: row.get("room"),
+            }
+        })
         .collect();
 
     Ok(plans)
@@ -398,6 +401,7 @@ pub fn best_talks(conn: &Connection,
         format!("LIMIT {}", limit)
     };
     let status: i16 = TalkStatus::Accepted.into();
+
     /// TODO: IMPL THE QUERIES
     let query = if all {
         format!(r#"
@@ -418,13 +422,13 @@ pub fn best_talks(conn: &Connection,
         .chain_err(|| "Unable to load day plan")?
         .iter()
         .map(|row| {
-                 BestTalk {
-                     talk: row.get("talk"),
-                     start_timestamp: row.get("start_timestamp"),
-                     title: row.get("title"),
-                     room: row.get("room"),
-                 }
-             })
+            BestTalk {
+                talk: row.get("talk"),
+                start_timestamp: row.get("start_timestamp"),
+                title: row.get("title"),
+                room: row.get("room"),
+            }
+        })
         .collect();
 
     Ok(talks)
@@ -449,22 +453,22 @@ pub fn most_popular_talks(conn: &Connection,
     let status: i16 = TalkStatus::Accepted.into();
     /// TODO: IMPL THE QUERY
     let query = format!(r#"
-            SELECT talk, start_timestamp, title, room
-            FROM talks
-            WHERE status = $1 AND start_timestamp::date = $2
-            ORDER BY room, start_timestamp {}"#,
+        SELECT talk, start_timestamp, title, room
+        FROM talks
+        WHERE status = $1 AND start_timestamp::date = $2
+        ORDER BY room, start_timestamp {}"#,
                         limit);
     let talks: Vec<_> = conn.query(&query[..], &[&status, &start_timestamp, &end_timestamp])
         .chain_err(|| "Unable to load day plan")?
         .iter()
         .map(|row| {
-                 MostPopularTalk {
-                     talk: row.get("talk"),
-                     start_timestamp: row.get("start_timestamp"),
-                     title: row.get("title"),
-                     room: row.get("room"),
-                 }
-             })
+            MostPopularTalk {
+                talk: row.get("talk"),
+                start_timestamp: row.get("start_timestamp"),
+                title: row.get("title"),
+                room: row.get("room"),
+            }
+        })
         .collect();
 
     Ok(talks)
@@ -477,23 +481,24 @@ pub fn attended_talks(conn: &Connection,
                       login: String,
                       password: String)
                       -> Result<Vec<AttendedTalk>> {
+
     let person_id = authorize_person_as(conn, &login, Some(&password), PersonType::User)?;
 
-    let talks: Vec<_> = conn.query(r#"
-            SELECT talk, start_timestamp, title, room
-            FROM person_attended_for_talk paft JOIN talks ON paft.talk_id=talks.id
-            WHERE paft.person_id = $1"#,
-                                   &[&person_id])
+    let query = r#"
+        SELECT talk, start_timestamp, title, room
+        FROM person_attended_for_talk paft JOIN talks ON paft.talk_id=talks.id
+        WHERE paft.person_id = $1"#;
+    let talks: Vec<_> = conn.query(query, &[&person_id])
         .chain_err(|| "Unable to load person's talks")?
         .iter()
         .map(|row| {
-                 AttendedTalk {
-                     talk: row.get("talk"),
-                     start_timestamp: row.get("start_timestamp"),
-                     title: row.get("title"),
-                     room: row.get("room"),
-                 }
-             })
+            AttendedTalk {
+                talk: row.get("talk"),
+                start_timestamp: row.get("start_timestamp"),
+                title: row.get("title"),
+                room: row.get("room"),
+            }
+        })
         .collect();
 
     Ok(talks)
@@ -510,6 +515,7 @@ pub fn abandoned_talks(conn: &Connection,
                        password: String,
                        limit: u32)
                        -> Result<Vec<AbandonedTalk>> {
+
     let person_id = authorize_person_as(conn, &login, Some(&password), PersonType::Organizer)?;
 
     let limit = if limit == 0 {
@@ -598,16 +604,18 @@ fn authorize_person_as(conn: &Connection,
     };
 
     match password {
-        Some(ref password) => conn.query(&format!(
+        Some(ref password) => {
+            let query = format!(
                 r#"SELECT id FROM persons WHERE login=$1 AND password=$2 {} LIMIT 1"#,
-                    organizer_part)[..],
-                &[&login, &password]
-        ),
-        None => conn.query(&format!(
+                    organizer_part);
+            conn.query(&query[..], &[&login, &password])
+        },
+        None => {
+            let query = format!(
                 r#"SELECT id FROM persons WHERE login=$1 {} LIMIT 1"#,
-                    organizer_part)[..],
-                &[&login]
-        ),
+                    organizer_part);
+            conn.query(&query[..], &[&login])
+        },
     }
     .chain_err(|| "Unable to authorize person")?
     .iter()
