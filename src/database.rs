@@ -170,11 +170,7 @@ pub fn register_user_for_event(conn: &Connection,
 
 /// (*U) attendance <login> <password> <talk>
 /// odnotowanie faktycznej obecności uczestnika <login> na referacie <talk>
-pub fn attendance(conn: &Connection,
-                  login: String,
-                  password: String,
-                  talk: String)
-                  -> Result<()> {
+pub fn attendance(conn: &Connection, login: String, password: String, talk: String) -> Result<()> {
     let person_id = authorize_person_as(conn, login, Some(password), PersonType::Participant)?;
 
     let talk_id: i32 = conn.query(r#"
