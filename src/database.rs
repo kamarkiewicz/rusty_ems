@@ -74,6 +74,23 @@ pub fn create_user(conn: &Connection,
     Ok(())
 }
 
+pub enum TalkStatus {
+    Proposed,
+    Accepted,
+    Rejected,
+}
+
+impl From<TalkStatus> for i16 {
+    fn from(status: TalkStatus) -> Self {
+        use self::TalkStatus::*;
+        match status {
+            Proposed => 0,
+            Accepted => 1,
+            Rejected => 2,
+        }
+    }
+}
+
 /// (*O) talk <login> <password>
 ///     <speakerlogin> <talk> <title> <start_timestamp> <room> <initial_evaluation> <eventname>
 /// rejestracja referatu/zatwierdzenie referatu spontanicznego,
@@ -96,7 +113,7 @@ pub fn register_or_accept_talk(conn: &Connection,
     let person_id = authorize_person_as(conn, login, Some(password), PersonType::Organizer)?;
 
     let speaker_id = authorize_person_as(conn, speakerlogin, None, PersonType::Whatever)?;
-    let status: i16 = 0;
+    let status: i16 = TalkStatus::Accepted.into();
     let event_id: Option<i32> = if eventname.is_empty() {
         None
     } else {
@@ -232,7 +249,7 @@ pub fn propose_spontaneous_talk(conn: &Connection,
                                 start_timestamp: DateTime)
                                 -> Result<()> {
     let speaker_id = authorize_person_as(conn, login, Some(password), PersonType::Participant)?;
-    let status: i16 = 0; // TODO: define statuses
+    let status: i16 = TalkStatus::Proposed.into();
 
     // insert a new proposal
     conn.execute(r#"
