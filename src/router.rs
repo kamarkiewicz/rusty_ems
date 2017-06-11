@@ -30,7 +30,8 @@ impl Context {
                    .. // secret has been validated on Request creation
                } => {
                    let conn = self.conn.as_ref().ok_or("establish connection first")?;
-                    create_organizer_account(&conn, newlogin, newpassword)?;
+                    create_organizer_account(&conn, newlogin, newpassword)
+                        .chain_err(|| "during Request::Organizer")?;
                     Response::Ok(ResponseInfo::Empty)
                },
 
@@ -51,7 +52,8 @@ impl Context {
                        Timestamp::DateTime(dt) => dt
                    };
                    create_event(&conn, login, password, eventname,
-                        start_timestamp, end_timestamp)?;
+                        start_timestamp, end_timestamp)
+                        .chain_err(|| "during Request::Event")?;
                    Response::Ok(ResponseInfo::Empty)
                },
 
@@ -63,7 +65,8 @@ impl Context {
                } => {
                    let conn = self.conn.as_ref().ok_or("establish connection first")?;
                    create_user(&conn, login, password,
-                        newlogin, newpassword)?;
+                        newlogin, newpassword)
+                        .chain_err(|| "during Request::User")?;
                    Response::Ok(ResponseInfo::Empty)
                },
 
@@ -85,7 +88,8 @@ impl Context {
                    };
                    register_or_accept_talk(&conn, login, password,
                    speakerlogin, talk, title, start_timestamp, room,
-                   initial_evaluation, eventname)?;
+                   initial_evaluation, eventname)
+                        .chain_err(|| "during Request::Talk")?;
                    Response::Ok(ResponseInfo::Empty)
                },
 
@@ -95,7 +99,8 @@ impl Context {
                    eventname
                } => {
                    let conn = self.conn.as_ref().ok_or("establish connection first")?;
-                   register_user_for_event(&conn, login, password, eventname)?;
+                   register_user_for_event(&conn, login, password, eventname)
+                        .chain_err(|| "during Request::RegisterUserForEvent")?;
                    Response::Ok(ResponseInfo::Empty)
                },
 
@@ -151,7 +156,8 @@ impl Context {
 
                Request::AttendedTalks { login, password } => {
                    let conn = self.conn.as_ref().ok_or("establish connection first")?;
-                   let talks = attended_talks(&conn, login, password)?;
+                   let talks = attended_talks(&conn, login, password)
+                        .chain_err(|| "during Request::AttendedTalks")?;
                    Response::Ok(ResponseInfo::AttendedTalks(talks))
                },
 
