@@ -161,6 +161,31 @@ pub fn register_user_for_event(conn: &Connection,
 
 /// (*U) evaluation <login> <password> <talk> <rating>
 /// ocena referatu <talk> w skali 0-10 przez uczestnika <login>
+pub fn evaluation(conn: &Connection,
+                  login: String,
+                  password: String,
+                  talk: String,
+                  rating: i16)
+                  -> Result<()> {
+    let person_id = authorize_person_as(conn, login, Some(password), PersonType::Participant)?;
+
+    let talk_id: i32 = conn.query(r#"
+            SELECT id FROM talks WHERE talk=$1 LIMIT 1"#,
+                                  &[&talk])
+        .chain_err(|| "Unable to load the talk")?
+        .iter()
+        .map(|row| row.get("id"))
+        .next()
+        .ok_or_else(|| format!("talk with talk=`{}` not found", talk))?;
+
+    conn.execute(r#"
+            INSERT INTO person_rated_talk (person_id, talk_id, rating)
+            VALUES ($1, $2, $3)"#,
+                 &[&person_id, &talk_id, &rating])
+        .chain_err(|| "Unable to evaluate the talk")?;
+
+    Ok(())
+}
 
 /// (O) reject <login> <password> <talk>
 /// usuwa referat spontaniczny <talk> z listy zaproponowanych,

@@ -115,7 +115,16 @@ impl Context {
                    password,
                    talk,
                    rating
-               } => { Response::NotImplemented },
+               } => {
+                   let conn = self.conn.as_ref().ok_or("establish connection first")?;
+                   let rating = rating.validate()?;
+                   if 0 > rating || rating > 10 {
+                       return Err("rating must be in range 0-10".into());
+                   };
+                   evaluation(&conn, login, password, talk, rating)
+                        .chain_err(|| "during Request::Evaluation")?;
+                   Response::Ok(ResponseInfo::Empty)
+                },
 
                Request::Reject {
                    login,
