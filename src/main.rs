@@ -91,12 +91,14 @@ fn main_ok(e: Response) -> () {
 }
 
 fn main_err(e: &Error) -> () {
-    use std::io::{stderr, Write};
-
     let error_json = json!({ "status": "ERROR" });
     println!("{}", error_json.to_string());
+    debug_main_err(e);
+}
 
-    /// following lines should be only in debug mode
+#[cfg(debug_assertions)]
+fn debug_main_err(e: &Error) -> () {
+    use std::io::{stderr, Write};
     let stderr = &mut stderr();
     let errmsg = "Error writing to stderr";
 
@@ -110,3 +112,6 @@ fn main_err(e: &Error) -> () {
         writeln!(stderr, "backtrace: {:?}", backtrace).expect(errmsg);
     }
 }
+
+#[cfg(not(debug_assertions))]
+fn debug_main_err(_: &Error) -> () {}

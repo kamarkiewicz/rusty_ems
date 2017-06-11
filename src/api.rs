@@ -322,7 +322,7 @@ pub struct AbandonedTalk {
     pub start_timestamp: DateTime,
     pub title: String,
     pub room: String,
-    pub number: u32,
+    pub number: i64,
 }
 
 #[derive(Debug, Serialize, PartialEq)]
