@@ -269,7 +269,10 @@ pub fn reject_spontaneous_talk(conn: &Connection,
 
     // update a proposal
     let query = r#"
-        UPDATE talks SET status = $1 WHERE talk = $2 AND status = $3"#;
+        UPDATE talks
+        SET status = $1
+        WHERE talk = $2
+          AND status = $3"#;
     let updates = conn.execute(query, &[&rejected, &talk, &proposed])
         .chain_err(|| "Unable to reject a proposal")?;
 
