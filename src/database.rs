@@ -1,6 +1,6 @@
 use errors::*;
 
-use api::{DateTime, AttendedTalk};
+use api::{DateTime, AttendedTalk, UserPlan};
 
 pub use postgres::{Connection, TlsMode};
 
@@ -310,6 +310,37 @@ pub fn make_friends(conn: &Connection,
 /// wypisuje pierwsze <limit> referatów, przy czym 0 oznacza, że należy wypisać wszystkie
 /// Atrybuty zwracanych krotek:
 ///   <login> <talk> <start_timestamp> <title> <room>
+pub fn user_plan(conn: &Connection, login: String, limit: u32) -> Result<Vec<UserPlan>> {
+    let person_id = authorize_person_as(conn, login, None, PersonType::Whatever)?;
+
+    let limit = if limit == 0 {
+        "".to_owned()
+    } else {
+        format!("LIMIT {}", limit)
+    };
+
+    let query = format!(r#"
+            SELECT login, talk, start_timestamp, title, room
+            FROM person_registered_for_talk prft JOIN talks ON prft.talk_id=talks.id
+            WHERE prft.person_id = $1 {}"#,
+                        limit);
+    let user_plans: Vec<_> = conn.query(&query[..], &[&person_id])
+        .chain_err(|| "Unable to load person's plan")?
+        .iter()
+        .map(|row| {
+            UserPlan {
+                login: row.get("login"),
+                talk: row.get("talk"),
+                start_timestamp: row.get("start_timestamp"),
+                title: row.get("title"),
+                room: row.get("room"),
+            }
+        })
+        .collect();
+
+    Ok(user_plans)
+}
+
 
 /// (*N) day_plan <timestamp>
 /// zwraca listę wszystkich referatów zaplanowanych na dany dzień posortowaną rosnąco wg sal,

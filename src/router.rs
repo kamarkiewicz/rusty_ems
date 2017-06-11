@@ -166,7 +166,13 @@ impl Context {
                    Response::Ok(ResponseInfo::Empty)
                },
 
-               Request::UserPlan { login, limit } => { Response::NotImplemented },
+               Request::UserPlan { login, limit } => {
+                   let conn = self.conn.as_ref().ok_or("establish connection first")?;
+                   let limit = limit.validate()?;
+                   let user_plans = user_plan(&conn, login, limit)
+                        .chain_err(|| "during Request::UserPlan")?;
+                   Response::Ok(ResponseInfo::UserPlans(user_plans))
+               },
 
                Request::DayPlan { timestamp } => { Response::NotImplemented },
 

@@ -73,9 +73,11 @@ pub enum StrOr<T> {
 }
 
 use std::str::FromStr;
-impl StrOr<i16> {
-    pub fn validate(self) -> Result<i16> {
-        use std::num::ParseIntError;
+use std::num::ParseIntError;
+impl<T> StrOr<T>
+    where T: FromStr<Err = ParseIntError>
+{
+    pub fn validate(self) -> Result<T> {
         use StrOr::*;
         match self {
             Str(s) => FromStr::from_str(&s[..]).map_err(|e: ParseIntError| e.into()),
@@ -244,11 +246,22 @@ pub enum Response {
 #[serde(untagged)]
 pub enum ResponseInfo {
     AttendedTalks(Vec<AttendedTalk>),
+    UserPlans(Vec<UserPlan>),
     Empty,
 }
 
 #[derive(Debug, Serialize, PartialEq)]
 pub struct AttendedTalk {
+    pub talk: String,
+    #[serde(with = "datetime_fmt")]
+    pub start_timestamp: DateTime,
+    pub title: String,
+    pub room: String,
+}
+
+#[derive(Debug, Serialize, PartialEq)]
+pub struct UserPlan {
+    pub login: String,
     pub talk: String,
     #[serde(with = "datetime_fmt")]
     pub start_timestamp: DateTime,
