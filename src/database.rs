@@ -228,14 +228,19 @@ pub fn evaluation(conn: &Connection,
 
     let person_id = authorize_person_as(conn, &login, Some(&password), PersonType::User)?;
 
+    let status: i16 = TalkStatus::Accepted.into();
     let query = r#"
-        SELECT id FROM talks WHERE talk=$1 LIMIT 1"#;
-    let talk_id: i32 = conn.query(query, &[&talk])
+        SELECT id
+        FROM talks
+        WHERE talk = $1
+          AND status = $2
+        LIMIT 1"#;
+    let talk_id: i32 = conn.query(query, &[&talk, &status])
         .chain_err(|| "Unable to load the talk")?
         .iter()
         .map(|row| row.get("id"))
         .next()
-        .ok_or_else(|| format!("talk with talk=`{}` not found", talk))?;
+        .ok_or_else(|| "talk doesn't exist or is not accepted")?;
 
     let query = r#"
         INSERT INTO person_rated_talk (person_id, talk_id, rating)
