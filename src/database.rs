@@ -310,8 +310,8 @@ pub fn make_friends(conn: &Connection,
     let person2_id = authorize_person_as(conn, &login2, None, PersonType::User)?;
 
     let query = r#"
-            INSERT INTO person_knows_person (person1_id, person2_id)
-            VALUES ($1, $2)"#;
+        INSERT INTO person_knows_person (person1_id, person2_id)
+        VALUES ($1, $2)"#;
     conn.execute(query, &[&person1_id, &person2_id])
         .chain_err(|| "These Users cannot be friends")?;
 
@@ -326,8 +326,6 @@ pub fn make_friends(conn: &Connection,
 ///   <login> <talk> <start_timestamp> <title> <room>
 pub fn user_plan(conn: &Connection, login: String, limit: u32) -> Result<Vec<UserPlan>> {
 
-    let person_id = authorize_person_as(conn, &login, None, PersonType::Whatever)?;
-
     let limit = if limit == 0 {
         "".to_owned()
     } else {
@@ -335,21 +333,25 @@ pub fn user_plan(conn: &Connection, login: String, limit: u32) -> Result<Vec<Use
     };
 
     let status: i16 = TalkStatus::Accepted.into();
-    // TODO: FIX THIS QUERY
     let query = format!(r#"
-        SELECT persons.login as login, talk, talks.start_timestamp, title, room
-        FROM person_registered_for_event prfe
-            JOIN events ON prfe.event_id=events.id
-            JOIN talks ON events.id=talks.event_id
-            JOIN persons ON speaker_id=persons.id
-        WHERE prfe.person_id = $1 AND talks.status = $2 {}"#,
+        WITH cte AS (
+          SELECT person_id, login as speakerlogin, talk, start_timestamp, title, room
+          FROM person_registered_for_event prfe
+            JOIN talks USING(event_id)
+            JOIN persons speakers ON speaker_id=speakers.id
+          WHERE status = $1
+        )
+        SELECT speakerlogin, talk, start_timestamp, title, room
+        FROM cte JOIN persons ON cte.person_id = persons.id
+        WHERE persons.login = $2
+        {}"#,
                         limit);
-    let plans: Vec<_> = conn.query(&query[..], &[&person_id, &status])
+    let plans: Vec<_> = conn.query(&query[..], &[&status, &login])
         .chain_err(|| "Unable to load person's plan")?
         .iter()
         .map(|row| {
             UserPlan {
-                login: row.get("login"),
+                login: row.get("speakerlogin"),
                 talk: row.get("talk"),
                 start_timestamp: row.get("start_timestamp"),
                 title: row.get("title"),
