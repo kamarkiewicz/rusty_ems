@@ -405,7 +405,7 @@ enum PersonType {
     Organizer,
 }
 
-#[rustfmt_skip]
+#[cfg_attr(rustfmt, rustfmt_skip)]
 fn authorize_person_as(conn: &Connection,
                        login: String,
                        password: Option<String>,

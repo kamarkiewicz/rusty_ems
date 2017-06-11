@@ -1,4 +1,3 @@
-#![feature(custom_attribute)]
 // `error_chain!` can recurse deeply
 #![recursion_limit = "1024"]
 
