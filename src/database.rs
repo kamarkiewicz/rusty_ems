@@ -94,7 +94,7 @@ pub fn register_or_accept_talk(conn: &Connection,
                                initial_evaluation: i16,
                                eventname: String)
                                -> Result<()> {
-    authorize_person_as(conn, login, Some(password), PersonType::Organizer)?;
+    let person_id = authorize_person_as(conn, login, Some(password), PersonType::Organizer)?;
 
     let speaker_id = authorize_person_as(conn, speakerlogin, None, PersonType::Whatever)?;
     let status: i16 = 0;
@@ -111,19 +111,31 @@ pub fn register_or_accept_talk(conn: &Connection,
             .ok_or_else(|| format!("event with eventname=`{}` not found", eventname))?
     };
 
-    conn.execute(r#"
+    // insert a new talk
+    let talk_id: i32 = conn.query(r#"
             INSERT INTO talks (speaker_id, talk, status, title, start_timestamp, room, event_id)
-            VALUES ($1, $2, $3, $4, $5, $6, $7)"#,
-                 &[&speaker_id,
-                   &talk,
-                   &status,
-                   &title,
-                   &start_timestamp,
-                   &room,
-                   &event_id])
-        .chain_err(|| "Unable to insert a talk")?;
+            VALUES ($1, $2, $3, $4, $5, $6, $7)
+            RETURNING id"#,
+                                  &[&speaker_id,
+                                    &talk,
+                                    &status,
+                                    &title,
+                                    &start_timestamp,
+                                    &room,
+                                    &event_id])
+        .chain_err(|| "Unable to insert a talk")?
+        .iter()
+        .map(|row| row.get("id"))
+        .next()
+        .ok_or_else(|| format!("talk with talk=`{}` not found", talk))?;
 
-    // TODO: insert initial_evaluation
+    // initial evaluation
+    conn.execute(r#"
+            INSERT INTO person_rated_talk (person_id, talk_id, rating)
+            VALUES ($1, $2, $3)"#,
+                 &[&person_id, &talk_id, &initial_evaluation])
+        .chain_err(|| "Unable to evaluate the talk")?;
+
 
     Ok(())
 }
