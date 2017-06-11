@@ -14,7 +14,7 @@ pub enum Timestamp {
 /// https://www.postgresql.org/docs/current/static/datatype-datetime.html
 mod timestamp_fmt {
     use super::{Timestamp, Date, DateTime};
-    use serde::{self, Deserialize, Serializer, Deserializer};
+    use serde::{self, Deserialize, Deserializer};
 
     const FORMAT_DATETIME: &'static str = "%Y-%m-%d %H:%M:%S";
     const FORMAT_DATE: &'static str = "%Y-%m-%d";
@@ -46,9 +46,16 @@ mod date_fmt {
 
 mod datetime_fmt {
     use super::DateTime;
-    use serde::{self, Deserialize, Deserializer};
+    use serde::{self, Deserialize, Serializer, Deserializer};
 
     const FORMAT: &'static str = "%Y-%m-%d %H:%M:%S";
+
+    pub fn serialize<S>(date: &DateTime, serializer: S) -> Result<S::Ok, S::Error>
+        where S: Serializer
+    {
+        let s = format!("{}", date.format(FORMAT));
+        serializer.serialize_str(&s)
+    }
 
     pub fn deserialize<'de, D>(deserializer: D) -> Result<DateTime, D::Error>
         where D: Deserializer<'de>
@@ -243,6 +250,7 @@ pub enum ResponseInfo {
 #[derive(Debug, Serialize, PartialEq)]
 pub struct AttendedTalk {
     pub talk: String,
+    #[serde(with = "datetime_fmt")]
     pub start_timestamp: DateTime,
     pub title: String,
     pub room: String,

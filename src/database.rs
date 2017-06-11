@@ -1,7 +1,6 @@
 use errors::*;
-use api::{Date, DateTime};
 
-use api::AttendedTalk;
+use api::{DateTime, AttendedTalk};
 
 pub use postgres::{Connection, TlsMode};
 
@@ -359,7 +358,6 @@ pub fn attended_talks(conn: &Connection,
 /// – ocen, obecności, znajomości itp.), wypisuje pierwsze <limit> referatów wg nalepszego <score>,
 /// przy czym 0 oznacza, że należy wypisać wszystkie
 ///  <talk> <speakerlogin> <start_timestamp> <title> <room> <score>
-fn fff() {}
 
 enum PersonType {
     Whatever,
