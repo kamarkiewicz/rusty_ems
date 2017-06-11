@@ -137,14 +137,15 @@ pub fn register_user_for_event(conn: &Connection,
                                -> Result<()> {
     let person_id = authorize_person_as(conn, login, Some(password), PersonType::Participant)?;
 
-    let event_id: i32 = conn.query(r#"
+    let event_id: i32 =
+        conn.query(r#"
             SELECT id FROM events WHERE eventname=$1 LIMIT 1"#,
-                                   &[&eventname])
-        .chain_err(|| "Unable to load event")?
-        .iter()
-        .map(|row| row.get("id"))
-        .next()
-        .ok_or_else(|| format!("event with eventname=`{}` not found", eventname))?;
+                   &[&eventname])
+            .chain_err(|| "Unable to load event")?
+            .iter()
+            .map(|row| row.get("id"))
+            .next()
+            .ok_or_else(|| format!("event with eventname=`{}` not found", eventname))?;
 
     conn.execute(r#"
             INSERT INTO person_registered_for_event (person_id, event_id)
