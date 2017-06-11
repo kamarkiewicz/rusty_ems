@@ -311,7 +311,7 @@ pub fn make_friends(conn: &Connection,
 /// Atrybuty zwracanych krotek:
 ///   <login> <talk> <start_timestamp> <title> <room>
 pub fn user_plan(conn: &Connection, login: String, limit: u32) -> Result<Vec<UserPlan>> {
-    let person_id = authorize_person_as(conn, login, None, PersonType::Whatever)?;
+    let person_id = authorize_person_as(conn, login.clone(), None, PersonType::Whatever)?;
 
     let limit = if limit == 0 {
         "".to_owned()
@@ -320,16 +320,18 @@ pub fn user_plan(conn: &Connection, login: String, limit: u32) -> Result<Vec<Use
     };
 
     let query = format!(r#"
-            SELECT login, talk, start_timestamp, title, room
-            FROM person_registered_for_talk prft JOIN talks ON prft.talk_id=talks.id
-            WHERE prft.person_id = $1 {}"#,
+            SELECT talk, talks.start_timestamp, title, room
+            FROM person_registered_for_event prfe
+                JOIN events ON prfe.event_id=events.id
+                JOIN talks ON events.id=talks.event_id
+            WHERE prfe.person_id = $1 {}"#,
                         limit);
     let user_plans: Vec<_> = conn.query(&query[..], &[&person_id])
         .chain_err(|| "Unable to load person's plan")?
         .iter()
         .map(|row| {
             UserPlan {
-                login: row.get("login"),
+                login: login.clone(),
                 talk: row.get("talk"),
                 start_timestamp: row.get("start_timestamp"),
                 title: row.get("title"),
