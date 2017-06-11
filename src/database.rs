@@ -342,8 +342,10 @@ pub fn user_plan(conn: &Connection, login: String, limit: u32) -> Result<Vec<Use
           WHERE status = $1
         )
         SELECT speakerlogin, talk, start_timestamp, title, room
-        FROM cte JOIN persons ON cte.person_id = persons.id
+        FROM cte
+          JOIN persons ON cte.person_id = persons.id
         WHERE persons.login = $2
+        ORDER BY start_timestamp
         {}"#,
                         limit);
     let plans: Vec<_> = conn.query(&query[..], &[&status, &login])
