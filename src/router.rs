@@ -135,7 +135,12 @@ impl Context {
                    login1,
                    password,
                    login2
-               } => { Response::NotImplemented },
+               } => {
+                   let conn = self.conn.as_ref().ok_or("establish connection first")?;
+                   make_friends(&conn, login1, password, login2)
+                        .chain_err(|| "during Request::Friends")?;
+                   Response::Ok(ResponseInfo::Empty)
+               },
 
                Request::UserPlan { login, limit } => { Response::NotImplemented },
 

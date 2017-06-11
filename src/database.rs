@@ -172,6 +172,22 @@ pub fn register_user_for_event(conn: &Connection,
 /// uczestnik <login1> chce nawiązać znajomość z uczestnikiem <login2>, znajomość uznajemy
 /// za nawiązaną jeśli obaj uczestnicy chcą ją nawiązać tj. po wywołaniach
 /// friends <login1> <password1> <login2> i friends <login2> <password2> <login1>
+pub fn make_friends(conn: &Connection,
+                    login1: String,
+                    password: String,
+                    login2: String)
+                    -> Result<()> {
+    let person1_id = authorize_person_as(conn, login1, Some(password), PersonType::Participant)?;
+    let person2_id = authorize_person_as(conn, login2, None, PersonType::Participant)?;
+
+    conn.execute(r#"
+            INSERT INTO person_knows_person (person1_id, person2_id)
+            VALUES ($1, $2)"#,
+                 &[&person1_id, &person2_id])
+        .chain_err(|| "These participants cannot be friends")?;
+
+    Ok(())
+}
 
 /// (*N) user_plan <login> <limit>
 /// zwraca plan najbliższych referatów z wydarzeń, na które dany uczestnik jest zapisany
