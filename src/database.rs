@@ -96,7 +96,36 @@ pub fn register_or_accept_talk(conn: &Connection,
                                -> Result<()> {
     authorize_person_as(conn, login, Some(password), PersonType::Organizer)?;
 
-    Err("UNIMPL".into())
+    let speaker_id = authorize_person_as(conn, speakerlogin, None, PersonType::Whatever)?;
+    let status: i16 = 0;
+    let event_id: Option<i32> = if eventname.is_empty() {
+        None
+    } else {
+        conn.query(r#"
+            SELECT id FROM events WHERE eventname=$1 LIMIT 1"#,
+                   &[&eventname])
+            .chain_err(|| "Unable to load event")?
+            .iter()
+            .map(|row| row.get("id"))
+            .next()
+            .ok_or_else(|| "NotFound")?
+    };
+
+    conn.execute(r#"
+            INSERT INTO talks (speaker_id, talk, status, title, start_timestamp, room, event_id)
+            VALUES ($1, $2, $3, $4, $5, $6, $7)"#,
+                 &[&speaker_id,
+                   &talk,
+                   &status,
+                   &title,
+                   &start_timestamp,
+                   &room,
+                   &event_id])
+        .chain_err(|| "Unable to insert a talk")?;
+
+    // TODO: insert initial_evaluation
+
+    Ok(())
 }
 
 /// (*U) register_user_for_event <login> <password> <eventname>
