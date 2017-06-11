@@ -408,28 +408,32 @@ pub fn best_talks(conn: &Connection,
     } else {
         format!("LIMIT {}", limit)
     };
+    let all = if all {
+        ""
+    } else {
+        "JOIN person_attended_for_talk USING(person_id, talk_id)"
+    };
     let status: i16 = TalkStatus::Accepted.into();
 
-    /// TODO: IMPL THE QUERIES
-    let query = if all {
-        format!(r#"
-            SELECT talk, start_timestamp, title, room
-            FROM talks
-            WHERE status = $1 AND
-                  start_timestamp >= $2 AND end_timestamp <= $3
-            ORDER BY room, start_timestamp {}"#,
-                limit)
-    } else {
-        format!(r#"
-            SELECT talk, start_timestamp, title, room
-            FROM talks
-            WHERE status = $1 AND
-                  start_timestamp >= $2 AND end_timestamp <= $3
-            ORDER BY room, start_timestamp {}"#,
-                limit)
-    };
+    let query = format!(r#"
+        WITH cte AS (
+          SELECT talk_id AS id, AVG(rating) AS average_rate
+          FROM person_rated_talk
+            {}
+          GROUP BY talk_id
+        )
+        SELECT talk, start_timestamp, title, room
+        FROM talks
+          JOIN cte USING(id)
+        WHERE status = $1
+          AND start_timestamp >= $2
+          AND start_timestamp <= $3
+        ORDER BY average_rate DESC
+        {}"#,
+                        all,
+                        limit);
     let talks: Vec<_> = conn.query(&query[..], &[&status, &start_timestamp, &end_timestamp])
-        .chain_err(|| "Unable to load day plan")?
+        .chain_err(|| "Unable to load best talks")?
         .iter()
         .map(|row| {
                  BestTalk {
