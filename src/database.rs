@@ -415,14 +415,16 @@ pub fn best_talks(conn: &Connection,
         format!(r#"
             SELECT talk, start_timestamp, title, room
             FROM talks
-            WHERE status = $1 AND start_timestamp::date = $2
+            WHERE status = $1 AND
+                  start_timestamp >= $2 AND end_timestamp <= $3
             ORDER BY room, start_timestamp {}"#,
                 limit)
     } else {
         format!(r#"
             SELECT talk, start_timestamp, title, room
             FROM talks
-            WHERE status = $1 AND start_timestamp::date = $2
+            WHERE status = $1 AND
+                  start_timestamp >= $2 AND end_timestamp <= $3
             ORDER BY room, start_timestamp {}"#,
                 limit)
     };
@@ -461,10 +463,11 @@ pub fn most_popular_talks(conn: &Connection,
     let status: i16 = TalkStatus::Accepted.into();
     /// TODO: IMPL THE QUERY
     let query = format!(r#"
-        SELECT talk, start_timestamp, title, room
-        FROM talks
-        WHERE status = $1 AND start_timestamp::date = $2
-        ORDER BY room, start_timestamp {}"#,
+            SELECT talk, start_timestamp, title, room
+            FROM talks
+            WHERE status = $1 AND
+                  start_timestamp >= $2 AND end_timestamp <= $3
+            ORDER BY room, start_timestamp {}"#,
                         limit);
     let talks: Vec<_> = conn.query(&query[..], &[&status, &start_timestamp, &end_timestamp])
         .chain_err(|| "Unable to load day plan")?
@@ -535,14 +538,12 @@ pub fn abandoned_talks(conn: &Connection,
     let status: i16 = TalkStatus::Accepted.into();
     // TODO: FIX THIS QUERY
     let query = format!(r#"
-            SELECT persons.login as login, talk, talks.start_timestamp, title, room
-            FROM person_registered_for_event prfe
-                JOIN events ON prfe.event_id=events.id
-                JOIN talks ON events.id=talks.event_id
-                JOIN persons ON speaker_id=persons.id
-            WHERE prfe.person_id = $1 AND talks.status = $2 {}"#,
+        SELECT talk, start_timestamp, title, room, 5 as number
+        FROM talks
+        WHERE status = $1
+        ORDER BY room, start_timestamp {}"#,
                         limit);
-    let talks: Vec<_> = conn.query(&query[..], &[&person_id, &status])
+    let talks: Vec<_> = conn.query(&query[..], &[&status])
         .chain_err(|| "Unable to load person's plan")?
         .iter()
         .map(|row| {
@@ -611,22 +612,21 @@ fn authorize_person_as(conn: &Connection,
     };
 
     match password {
-        Some(ref password) => {
-            let query = format!(
+            Some(ref password) => {
+                let query = format!(
                 r#"SELECT id FROM persons WHERE login=$1 AND password=$2 {} LIMIT 1"#,
                     organizer_part);
-            conn.query(&query[..], &[&login, &password])
-        },
-        None => {
-            let query = format!(
-                r#"SELECT id FROM persons WHERE login=$1 {} LIMIT 1"#,
-                    organizer_part);
-            conn.query(&query[..], &[&login])
-        },
-    }
-    .chain_err(|| "Unable to authorize person")?
-    .iter()
-    .map(|row| row.get("id"))
-    .next()
-    .ok_or_else(|| "Requested person not found".into())
+                conn.query(&query[..], &[&login, &password])
+            }
+            None => {
+                let query = format!(r#"SELECT id FROM persons WHERE login=$1 {} LIMIT 1"#,
+                                    organizer_part);
+                conn.query(&query[..], &[&login])
+            }
+        }
+        .chain_err(|| "Unable to authorize person")?
+        .iter()
+        .map(|row| row.get("id"))
+        .next()
+        .ok_or_else(|| "Requested person not found".into())
 }
