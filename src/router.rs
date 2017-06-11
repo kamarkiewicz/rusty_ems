@@ -207,7 +207,22 @@ impl Context {
                    start_timestamp,
                    end_timestamp,
                    limit
-               } => { Response::NotImplemented },
+               } => {
+                   let conn = self.conn.as_ref().ok_or("establish connection first")?;
+                   let start_timestamp = match start_timestamp {
+                       Timestamp::Date(d) => d.and_hms(0, 0, 0),
+                       Timestamp::DateTime(dt) => dt
+                   };
+                   let end_timestamp = match end_timestamp {
+                       Timestamp::Date(d) => d.and_hms(23, 59, 59),
+                       Timestamp::DateTime(dt) => dt
+                   };
+                   let limit: u32 = limit.validate()?;
+                   let most_popular_talks = most_popular_talks(&conn,
+                            start_timestamp, end_timestamp, limit)
+                        .chain_err(|| "during Request::MostPopularTalks")?;
+                   Response::Ok(ResponseInfo::MostPopularTalks(most_popular_talks))
+               },
 
                Request::AttendedTalks { login, password } => {
                    let conn = self.conn.as_ref().ok_or("establish connection first")?;
@@ -220,7 +235,13 @@ impl Context {
                    login,
                    password,
                    limit
-               } => { Response::NotImplemented },
+               } => {
+                   let conn = self.conn.as_ref().ok_or("establish connection first")?;
+                   let limit: u32 = limit.validate()?;
+                   let talks = abandoned_talks(&conn, login, password, limit)
+                        .chain_err(|| "during Request::AbandonedTalks")?;
+                   Response::Ok(ResponseInfo::AbandonedTalks(talks))
+               },
 
                Request::RecentlyAddedTalks { limit } => { Response::NotImplemented },
 

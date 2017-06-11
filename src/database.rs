@@ -333,7 +333,7 @@ pub fn user_plan(conn: &Connection, login: String, limit: u32) -> Result<Vec<Use
                 JOIN persons ON speaker_id=persons.id
             WHERE prfe.person_id = $1 AND talks.status = $2 {}"#,
                         limit);
-    let user_plans: Vec<_> = conn.query(&query[..], &[&person_id, &status])
+    let plans: Vec<_> = conn.query(&query[..], &[&person_id, &status])
         .chain_err(|| "Unable to load person's plan")?
         .iter()
         .map(|row| {
@@ -347,7 +347,7 @@ pub fn user_plan(conn: &Connection, login: String, limit: u32) -> Result<Vec<Use
         })
         .collect();
 
-    Ok(user_plans)
+    Ok(plans)
 }
 
 /// (*N) day_plan <timestamp>
@@ -362,7 +362,7 @@ pub fn day_plan(conn: &Connection, date: Date) -> Result<Vec<DayPlan>> {
             FROM talks
             WHERE status = $1 AND start_timestamp::date = $2
             ORDER BY room, start_timestamp"#;
-    let day_plans: Vec<_> = conn.query(&query[..], &[&status, &date])
+    let plans: Vec<_> = conn.query(&query[..], &[&status, &date])
         .chain_err(|| "Unable to load day plan")?
         .iter()
         .map(|row| {
@@ -375,7 +375,7 @@ pub fn day_plan(conn: &Connection, date: Date) -> Result<Vec<DayPlan>> {
              })
         .collect();
 
-    Ok(day_plans)
+    Ok(plans)
 }
 
 /// (*N) best_talks <start_timestamp> <end_timestamp> <limit> <all>
@@ -398,22 +398,22 @@ pub fn best_talks(conn: &Connection,
         format!("LIMIT {}", limit)
     };
     let status: i16 = TalkStatus::Accepted.into();
+    /// TODO: IMPL THE QUERIES
     let query = if all {
         format!(r#"
             SELECT talk, start_timestamp, title, room
             FROM talks
             WHERE status = $1 AND start_timestamp::date = $2
-            ORDER BY room, start_timestamp {}"#,
-                limit)
+            ORDER BY room, start_timestamp {}"#, limit)
     } else {
         format!(r#"
             SELECT talk, start_timestamp, title, room
             FROM talks
             WHERE status = $1 AND start_timestamp::date = $2
-            ORDER BY room, start_timestamp {}"#,
-                limit)
+            ORDER BY room, start_timestamp {}"#, limit)
     };
-    let best_talks: Vec<_> = conn.query(&query[..], &[&status, &start_timestamp, &end_timestamp])
+    let talks: Vec<_> = conn.query(&query[..],
+            &[&status, &start_timestamp, &end_timestamp])
         .chain_err(|| "Unable to load day plan")?
         .iter()
         .map(|row| {
@@ -426,7 +426,7 @@ pub fn best_talks(conn: &Connection,
              })
         .collect();
 
-    Ok(best_talks)
+    Ok(talks)
 }
 
 /// (*N) most_popular_talks <start_timestamp> <end_timestamp> <limit>
@@ -434,6 +434,40 @@ pub fn best_talks(conn: &Connection,
 /// wg obecności, wypisuje pierwsze <limit> referatów, przy czym 0 oznacza,
 /// że należy wypisać wszystkie
 ///  <talk> <start_timestamp> <title> <room>
+pub fn most_popular_talks(conn: &Connection,
+                  start_timestamp: DateTime,
+                  end_timestamp: DateTime,
+                  limit: u32)
+                  -> Result<Vec<MostPopularTalk>> {
+
+    let limit = if limit == 0 {
+        "".to_owned()
+    } else {
+        format!("LIMIT {}", limit)
+    };
+    let status: i16 = TalkStatus::Accepted.into();
+    /// TODO: IMPL THE QUERY
+    let query = format!(r#"
+            SELECT talk, start_timestamp, title, room
+            FROM talks
+            WHERE status = $1 AND start_timestamp::date = $2
+            ORDER BY room, start_timestamp {}"#, limit);
+    let talks: Vec<_> = conn.query(&query[..],
+            &[&status, &start_timestamp, &end_timestamp])
+        .chain_err(|| "Unable to load day plan")?
+        .iter()
+        .map(|row| {
+                 MostPopularTalk {
+                     talk: row.get("talk"),
+                     start_timestamp: row.get("start_timestamp"),
+                     title: row.get("title"),
+                     room: row.get("room"),
+                 }
+             })
+        .collect();
+
+    Ok(talks)
+}
 
 /// (*U) attended_talks <login> <password>
 /// zwraca dla danego uczestnika referaty, na których był obecny
@@ -444,7 +478,7 @@ pub fn attended_talks(conn: &Connection,
                       -> Result<Vec<AttendedTalk>> {
     let person_id = authorize_person_as(conn, &login, Some(&password), PersonType::Participant)?;
 
-    let attended_talks: Vec<_> = conn.query(r#"
+    let talks: Vec<_> = conn.query(r#"
             SELECT talk, start_timestamp, title, room
             FROM person_attended_for_talk paft JOIN talks ON paft.talk_id=talks.id
             WHERE paft.person_id = $1"#,
@@ -461,7 +495,7 @@ pub fn attended_talks(conn: &Connection,
              })
         .collect();
 
-    Ok(attended_talks)
+    Ok(talks)
 }
 
 /// (*O) abandoned_talks <login> <password>  <limit>
@@ -470,6 +504,45 @@ pub fn attended_talks(conn: &Connection,
 /// którzy nie byli na tym referacie obecni, wypisuje pierwsze <limit> referatów,
 /// przy czym 0 oznacza, że należy wypisać wszystkie
 ///  <talk> <start_timestamp> <title> <room> <number>
+pub fn abandoned_talks(conn: &Connection,
+                       login: String,
+                       password: String,
+                       limit: u32)
+                       -> Result<Vec<AbandonedTalk>> {
+    let person_id = authorize_person_as(conn, &login, Some(&password), PersonType::Organizer)?;
+
+    let limit = if limit == 0 {
+        "".to_owned()
+    } else {
+        format!("LIMIT {}", limit)
+    };
+
+    let status: i16 = TalkStatus::Accepted.into();
+    // TODO: FIX THIS QUERY
+    let query = format!(r#"
+            SELECT persons.login as login, talk, talks.start_timestamp, title, room
+            FROM person_registered_for_event prfe
+                JOIN events ON prfe.event_id=events.id
+                JOIN talks ON events.id=talks.event_id
+                JOIN persons ON speaker_id=persons.id
+            WHERE prfe.person_id = $1 AND talks.status = $2 {}"#,
+                        limit);
+    let talks: Vec<_> = conn.query(&query[..], &[&person_id, &status])
+        .chain_err(|| "Unable to load person's plan")?
+        .iter()
+        .map(|row| {
+            AbandonedTalk {
+                talk: row.get("talk"),
+                start_timestamp: row.get("start_timestamp"),
+                title: row.get("title"),
+                room: row.get("room"),
+                number: row.get("number"),
+            }
+        })
+        .collect();
+
+    Ok(talks)
+}
 
 /// (N) recently_added_talks <limit>
 /// zwraca listę ostatnio zarejestrowanych referatów, wypisuje ostatnie <limit> referatów
