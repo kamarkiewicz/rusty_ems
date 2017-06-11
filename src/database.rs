@@ -1,7 +1,7 @@
 use errors::*;
 use api::{Date, DateTime};
 
-use api::{AttendedTalk};
+use api::AttendedTalk;
 
 pub use postgres::{Connection, TlsMode};
 
@@ -169,8 +169,10 @@ pub fn register_user_for_event(conn: &Connection,
 /// (*U) attended_talks <login> <password>
 /// zwraca dla danego uczestnika referaty, na których był obecny
 ///  <talk> <start_timestamp> <title> <room>
-pub fn attended_talks(conn: &Connection, login: String, password: String)
-    -> Result<Vec<AttendedTalk>> {
+pub fn attended_talks(conn: &Connection,
+                      login: String,
+                      password: String)
+                      -> Result<Vec<AttendedTalk>> {
     // let person = authorize_person(&conn, login, password)?;
 
     // use schema::{person_attended_for_talk, talks};
@@ -232,6 +234,7 @@ enum PersonType {
     Organizer,
 }
 
+#[rustfmt_skip]
 fn authorize_person_as(conn: &Connection,
                        login: String,
                        password: Option<String>,

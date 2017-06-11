@@ -237,7 +237,7 @@ pub enum Response {
 #[serde(untagged)]
 pub enum ResponseInfo {
     AttendedTalks(Vec<AttendedTalk>),
-    Empty
+    Empty,
 }
 
 #[derive(Debug, Serialize, PartialEq)]
