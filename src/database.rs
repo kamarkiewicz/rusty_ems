@@ -133,11 +133,15 @@ pub fn register_or_accept_talk(conn: &Connection,
     };
     let status: i16 = TalkStatus::Accepted.into();
 
-    // TODO: handle accepting the proposal
-    // insert a new talk
+    // upsert a talk
     let query = r#"
         INSERT INTO talks (speaker_id, talk, status, title, start_timestamp, room, event_id)
         VALUES ($1, $2, $3, $4, $5, $6, $7)
+        ON CONFLICT (talk)
+        DO UPDATE SET
+          status = EXCLUDED.status,
+          room = EXCLUDED.room,
+          event_id = EXCLUDED.event_id
         RETURNING id"#;
     let talk_id: i32 = conn.query(query,
                                   &[&speaker_id,
@@ -351,6 +355,7 @@ pub fn user_plan(conn: &Connection, login: String, limit: u32) -> Result<Vec<Use
             JOIN talks USING(event_id)
             JOIN persons speakers ON speaker_id=speakers.id
           WHERE status = $1
+            AND start_timestamp >= now()
         )
         SELECT speakerlogin, talk, start_timestamp, title, room
         FROM cte
@@ -432,8 +437,8 @@ pub fn best_talks(conn: &Connection,
     let status: i16 = TalkStatus::Accepted.into();
 
     let query = format!(r#"
-        WITH cte AS (
-          SELECT talk_id AS id, AVG(rating) AS average_rate
+        WITH cte(id, average_rate) AS (
+          SELECT talk_id, AVG(rating)
           FROM person_rated_talk
             {}
           GROUP BY talk_id
