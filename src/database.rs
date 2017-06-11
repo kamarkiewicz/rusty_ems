@@ -108,7 +108,7 @@ pub fn register_or_accept_talk(conn: &Connection,
             .iter()
             .map(|row| row.get("id"))
             .next()
-            .ok_or_else(|| "NotFound")?
+            .ok_or_else(|| format!("event with eventname=`{}` not found", eventname))?
     };
 
     conn.execute(r#"
@@ -144,7 +144,7 @@ pub fn register_user_for_event(conn: &Connection,
         .iter()
         .map(|row| row.get("id"))
         .next()
-        .ok_or_else(|| "NotFound")?;
+        .ok_or_else(|| format!("event with eventname=`{}` not found", eventname))?;
 
     conn.execute(r#"
             INSERT INTO person_registered_for_event (person_id, event_id)
@@ -303,5 +303,5 @@ fn authorize_person_as(conn: &Connection,
     .iter()
     .map(|row| row.get("id"))
     .next()
-    .ok_or_else(|| "NotFound".into())
+    .ok_or_else(|| "Requested person not found".into())
 }
