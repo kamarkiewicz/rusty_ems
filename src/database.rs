@@ -375,7 +375,8 @@ pub fn day_plan(conn: &Connection, date: Date) -> Result<Vec<DayPlan>> {
     let query = r#"
         SELECT talk, start_timestamp, title, room
         FROM talks
-        WHERE status = $1 AND start_timestamp::date = $2
+        WHERE status = $1
+          AND start_timestamp::date = $2
         ORDER BY room, start_timestamp"#;
     let plans: Vec<_> = conn.query(&query[..], &[&status, &date])
         .chain_err(|| "Unable to load day plan")?
