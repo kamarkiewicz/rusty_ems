@@ -108,7 +108,12 @@ impl Context {
                    login,
                    password,
                    talk
-               } => { Response::NotImplemented },
+               } => {
+                   let conn = self.conn.as_ref().ok_or("establish connection first")?;
+                   attendance(&conn, login, password, talk)
+                        .chain_err(|| "during Request::Attendance")?;
+                   Response::Ok(ResponseInfo::Empty)
+               },
 
                Request::Evaluation {
                    login,
@@ -124,7 +129,7 @@ impl Context {
                    evaluation(&conn, login, password, talk, rating)
                         .chain_err(|| "during Request::Evaluation")?;
                    Response::Ok(ResponseInfo::Empty)
-                },
+               },
 
                Request::Reject {
                    login,
