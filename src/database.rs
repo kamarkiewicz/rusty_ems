@@ -404,16 +404,17 @@ pub fn best_talks(conn: &Connection,
             SELECT talk, start_timestamp, title, room
             FROM talks
             WHERE status = $1 AND start_timestamp::date = $2
-            ORDER BY room, start_timestamp {}"#, limit)
+            ORDER BY room, start_timestamp {}"#,
+                limit)
     } else {
         format!(r#"
             SELECT talk, start_timestamp, title, room
             FROM talks
             WHERE status = $1 AND start_timestamp::date = $2
-            ORDER BY room, start_timestamp {}"#, limit)
+            ORDER BY room, start_timestamp {}"#,
+                limit)
     };
-    let talks: Vec<_> = conn.query(&query[..],
-            &[&status, &start_timestamp, &end_timestamp])
+    let talks: Vec<_> = conn.query(&query[..], &[&status, &start_timestamp, &end_timestamp])
         .chain_err(|| "Unable to load day plan")?
         .iter()
         .map(|row| {
@@ -435,10 +436,10 @@ pub fn best_talks(conn: &Connection,
 /// że należy wypisać wszystkie
 ///  <talk> <start_timestamp> <title> <room>
 pub fn most_popular_talks(conn: &Connection,
-                  start_timestamp: DateTime,
-                  end_timestamp: DateTime,
-                  limit: u32)
-                  -> Result<Vec<MostPopularTalk>> {
+                          start_timestamp: DateTime,
+                          end_timestamp: DateTime,
+                          limit: u32)
+                          -> Result<Vec<MostPopularTalk>> {
 
     let limit = if limit == 0 {
         "".to_owned()
@@ -451,9 +452,9 @@ pub fn most_popular_talks(conn: &Connection,
             SELECT talk, start_timestamp, title, room
             FROM talks
             WHERE status = $1 AND start_timestamp::date = $2
-            ORDER BY room, start_timestamp {}"#, limit);
-    let talks: Vec<_> = conn.query(&query[..],
-            &[&status, &start_timestamp, &end_timestamp])
+            ORDER BY room, start_timestamp {}"#,
+                        limit);
+    let talks: Vec<_> = conn.query(&query[..], &[&status, &start_timestamp, &end_timestamp])
         .chain_err(|| "Unable to load day plan")?
         .iter()
         .map(|row| {
@@ -482,7 +483,7 @@ pub fn attended_talks(conn: &Connection,
             SELECT talk, start_timestamp, title, room
             FROM person_attended_for_talk paft JOIN talks ON paft.talk_id=talks.id
             WHERE paft.person_id = $1"#,
-                                            &[&person_id])
+                                   &[&person_id])
         .chain_err(|| "Unable to load person's talks")?
         .iter()
         .map(|row| {
