@@ -143,7 +143,12 @@ impl Context {
                    talk,
                    title,
                    start_timestamp
-               } => { Response::NotImplemented },
+               } => {
+                   let conn = self.conn.as_ref().ok_or("establish connection first")?;
+                   propose_spontaneous_talk(&conn, login, password, talk, title, start_timestamp)
+                        .chain_err(|| "during Request::Proposal")?;
+                   Response::Ok(ResponseInfo::Empty)
+               },
 
                Request::Friends {
                    login1,

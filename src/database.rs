@@ -222,8 +222,27 @@ pub fn evaluation(conn: &Connection,
 /// (O) reject <login> <password> <talk>
 /// usuwa referat spontaniczny <talk> z listy zaproponowanych,
 
-/// (U) proposal  <login> <password> <talk> <title> <start_timestamp>
+/// (U) proposal <login> <password> <talk> <title> <start_timestamp>
 /// propozycja referatu spontanicznego, <talk> - unikalny identyfikator referatu
+pub fn propose_spontaneous_talk(conn: &Connection,
+                                login: String,
+                                password: String,
+                                talk: String,
+                                title: String,
+                                start_timestamp: DateTime)
+                                -> Result<()> {
+    let speaker_id = authorize_person_as(conn, login, Some(password), PersonType::Participant)?;
+    let status: i16 = 0; // TODO: define statuses
+
+    // insert a new proposal
+    conn.execute(r#"
+            INSERT INTO talks (speaker_id, talk, status, title, start_timestamp)
+            VALUES ($1, $2, $3, $4, $5)"#,
+                 &[&speaker_id, &talk, &status, &title, &start_timestamp])
+        .chain_err(|| "Unable to insert a proposal")?;
+
+    Ok(())
+}
 
 /// (U) friends <login1> <password> <login2>
 /// uczestnik <login1> chce nawiązać znajomość z uczestnikiem <login2>, znajomość uznajemy
