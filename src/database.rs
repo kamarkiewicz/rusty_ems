@@ -563,7 +563,7 @@ pub fn abandoned_talks(conn: &Connection,
                        limit: u32)
                        -> Result<Vec<AbandonedTalk>> {
 
-    let person_id = authorize_person_as(conn, &login, Some(&password), PersonType::Organizer)?;
+    authorize_person_as(conn, &login, Some(&password), PersonType::Organizer)?;
 
     let limit = if limit == 0 {
         "".to_owned()
@@ -571,16 +571,27 @@ pub fn abandoned_talks(conn: &Connection,
         format!("LIMIT {}", limit)
     };
 
-    let status: i16 = TalkStatus::Accepted.into();
     // TODO: FIX THIS QUERY
     let query = format!(r#"
-        SELECT talk, start_timestamp, title, room, 5 as number
+        WITH person_registered_for_talk(person_id, talk_id) AS (
+          SELECT person_id, talks.id
+          FROM person_registered_for_event
+            JOIN talks USING(event_id)
+        ),
+        cte(talk_id, absent) AS (
+          SELECT talk_id, count(person_id)
+          FROM person_registered_for_talk
+          WHERE (person_id, talk_id) NOT IN (SELECT * FROM person_attended_for_talk)
+          GROUP BY talk_id 
+        )
+        SELECT talk, start_timestamp, title, room, absent
         FROM talks
-        WHERE status = $1
-        ORDER BY room, start_timestamp {}"#,
+          JOIN cte ON cte.talk_id = talks.id
+        ORDER BY absent DESC
+        {}"#,
                         limit);
-    let talks: Vec<_> = conn.query(&query[..], &[&status])
-        .chain_err(|| "Unable to load person's plan")?
+    let talks: Vec<_> = conn.query(&query[..], &[])
+        .chain_err(|| "Unable to load abandoned talks")?
         .iter()
         .map(|row| {
             AbandonedTalk {
@@ -588,7 +599,7 @@ pub fn abandoned_talks(conn: &Connection,
                 start_timestamp: row.get("start_timestamp"),
                 title: row.get("title"),
                 room: row.get("room"),
-                number: row.get("number"),
+                number: row.get("absent"),
             }
         })
         .collect();
