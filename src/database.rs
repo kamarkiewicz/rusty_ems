@@ -113,7 +113,7 @@ pub fn register_or_accept_talk(conn: &Connection,
     let person_id = authorize_person_as(conn, login, Some(password), PersonType::Organizer)?;
 
     let speaker_id = authorize_person_as(conn, speakerlogin, None, PersonType::Whatever)?;
-    let status: i16 = TalkStatus::Accepted.into();
+
     let event_id: Option<i32> = if eventname.is_empty() {
         None
     } else {
@@ -129,6 +129,7 @@ pub fn register_or_accept_talk(conn: &Connection,
 
     // TODO: handle accepting the proposal
     // insert a new talk
+    let status: i16 = TalkStatus::Accepted.into();
     let talk_id: i32 = conn.query(r#"
             INSERT INTO talks (speaker_id, talk, status, title, start_timestamp, room, event_id)
             VALUES ($1, $2, $3, $4, $5, $6, $7)
@@ -319,19 +320,21 @@ pub fn user_plan(conn: &Connection, login: String, limit: u32) -> Result<Vec<Use
         format!("LIMIT {}", limit)
     };
 
+    let status: i16 = TalkStatus::Accepted.into();
     let query = format!(r#"
-            SELECT talk, talks.start_timestamp, title, room
+            SELECT persons.login as login, talk, talks.start_timestamp, title, room
             FROM person_registered_for_event prfe
                 JOIN events ON prfe.event_id=events.id
                 JOIN talks ON events.id=talks.event_id
-            WHERE prfe.person_id = $1 {}"#,
+                JOIN persons ON speaker_id=persons.id
+            WHERE prfe.person_id = $1 AND talks.status = $2 {}"#,
                         limit);
-    let user_plans: Vec<_> = conn.query(&query[..], &[&person_id])
+    let user_plans: Vec<_> = conn.query(&query[..], &[&person_id, &status])
         .chain_err(|| "Unable to load person's plan")?
         .iter()
         .map(|row| {
             UserPlan {
-                login: login.clone(),
+                login: row.get("login"),
                 talk: row.get("talk"),
                 start_timestamp: row.get("start_timestamp"),
                 title: row.get("title"),
