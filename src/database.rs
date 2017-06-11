@@ -110,6 +110,7 @@ pub fn register_or_accept_talk(conn: &Connection,
             .ok_or_else(|| format!("event with eventname=`{}` not found", eventname))?
     };
 
+    // TODO: handle accepting the proposal
     // insert a new talk
     let talk_id: i32 = conn.query(r#"
             INSERT INTO talks (speaker_id, talk, status, title, start_timestamp, room, event_id)
