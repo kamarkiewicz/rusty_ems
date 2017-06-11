@@ -186,7 +186,22 @@ impl Context {
                    end_timestamp,
                    limit,
                    all
-               } => { Response::NotImplemented },
+               } => {
+                   let conn = self.conn.as_ref().ok_or("establish connection first")?;
+                   let start_timestamp = match start_timestamp {
+                       Timestamp::Date(d) => d.and_hms(0, 0, 0),
+                       Timestamp::DateTime(dt) => dt
+                   };
+                   let end_timestamp = match end_timestamp {
+                       Timestamp::Date(d) => d.and_hms(23, 59, 59),
+                       Timestamp::DateTime(dt) => dt
+                   };
+                   let limit: u32 = limit.validate()?;
+                   let all: bool = all.validate()? == 1;
+                   let best_talks = best_talks(&conn, start_timestamp, end_timestamp, limit, all)
+                        .chain_err(|| "during Request::BestTalks")?;
+                   Response::Ok(ResponseInfo::BestTalks(best_talks))
+               },
 
                Request::MostPopularTalks {
                    start_timestamp,

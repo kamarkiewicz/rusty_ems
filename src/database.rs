@@ -385,6 +385,49 @@ pub fn day_plan(conn: &Connection, date: Date) -> Result<Vec<DayPlan>> {
 /// byli na referacie obecni, wypisuje pierwsze <limit> referatów, przy czym 0 oznacza,
 /// że należy wypisać wszystkie
 ///  <talk> <start_timestamp> <title> <room>
+pub fn best_talks(conn: &Connection,
+                  start_timestamp: DateTime,
+                  end_timestamp: DateTime,
+                  limit: u32,
+                  all: bool)
+                  -> Result<Vec<BestTalk>> {
+
+    let limit = if limit == 0 {
+        "".to_owned()
+    } else {
+        format!("LIMIT {}", limit)
+    };
+    let status: i16 = TalkStatus::Accepted.into();
+    let query = if all {
+        format!(r#"
+            SELECT talk, start_timestamp, title, room
+            FROM talks
+            WHERE status = $1 AND start_timestamp::date = $2
+            ORDER BY room, start_timestamp {}"#,
+                limit)
+    } else {
+        format!(r#"
+            SELECT talk, start_timestamp, title, room
+            FROM talks
+            WHERE status = $1 AND start_timestamp::date = $2
+            ORDER BY room, start_timestamp {}"#,
+                limit)
+    };
+    let best_talks: Vec<_> = conn.query(&query[..], &[&status, &start_timestamp, &end_timestamp])
+        .chain_err(|| "Unable to load day plan")?
+        .iter()
+        .map(|row| {
+                 BestTalk {
+                     talk: row.get("talk"),
+                     start_timestamp: row.get("start_timestamp"),
+                     title: row.get("title"),
+                     room: row.get("room"),
+                 }
+             })
+        .collect();
+
+    Ok(best_talks)
+}
 
 /// (*N) most_popular_talks <start_timestamp> <end_timestamp> <limit>
 /// zwraca referaty rozpoczynające się w podanym przedziału czasowego posortowane malejąco
