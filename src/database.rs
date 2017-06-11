@@ -173,18 +173,26 @@ pub fn attended_talks(conn: &Connection,
                       login: String,
                       password: String)
                       -> Result<Vec<AttendedTalk>> {
-    // let person = authorize_person(&conn, login, password)?;
+    let person_id = authorize_person_as(conn, login, Some(password), PersonType::Participant)?;
 
-    // use schema::{person_attended_for_talk, talks};
-    // use models::AttendedTalks;
-    // let query = sql::<AttendedTalks>(
-    //     r#"SELECT talk, start_timestamp, title, room FROM person_attended_for_talk paft
-    //        JOIN talks ON paft.talk_id=talks.id
-    //        WHERE paft.person_id = 1 AND talks.start_timestamp >= 2;"#);
-    // let talks: Vec<AttendedTalks> = query.get_results(conn).chain_err(|| "sth goes wrong...")?;
+    let attended_talks: Vec<_> = conn.query(r#"
+            SELECT talk, start_timestamp, title, room
+            FROM person_attended_for_talk paft JOIN talks ON paft.talk_id=talks.id
+            WHERE paft.person_id = $1"#,
+                                            &[&person_id])
+        .chain_err(|| "Unable to load person's talks")?
+        .iter()
+        .map(|row| {
+                 AttendedTalk {
+                     talk: row.get("talk"),
+                     start_timestamp: row.get("start_timestamp"),
+                     title: row.get("title"),
+                     room: row.get("room"),
+                 }
+             })
+        .collect();
 
-
-    Ok(Vec::new())
+    Ok(attended_talks)
 }
 
 /// (*O) abandoned_talks <login> <password>  <limit>

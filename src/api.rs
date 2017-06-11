@@ -242,10 +242,10 @@ pub enum ResponseInfo {
 
 #[derive(Debug, Serialize, PartialEq)]
 pub struct AttendedTalk {
-    talk: String,
-    start_timestamp: DateTime,
-    title: String,
-    room: String,
+    pub talk: String,
+    pub start_timestamp: DateTime,
+    pub title: String,
+    pub room: String,
 }
 
 static SECRET: &str = "d8578edf8458ce06fbc5bb76a58c5ca4";
