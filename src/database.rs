@@ -38,7 +38,7 @@ pub fn create_event(conn: &Connection,
                     start_timestamp: DateTime,
                     end_timestamp: DateTime)
                     -> Result<()> {
-    authorize_person_as(conn, login, Some(password), PersonType::Organizer)?;
+    authorize_person_as(conn, &login, Some(&password), PersonType::Organizer)?;
 
     // insert new event
     conn.execute(r#"
@@ -62,7 +62,7 @@ pub fn create_user(conn: &Connection,
                    newlogin: String,
                    newpassword: String)
                    -> Result<()> {
-    authorize_person_as(conn, login, Some(password), PersonType::Organizer)?;
+    authorize_person_as(conn, &login, Some(&password), PersonType::Organizer)?;
 
     // insert new person
     conn.execute(r#"
@@ -110,9 +110,9 @@ pub fn register_or_accept_talk(conn: &Connection,
                                initial_evaluation: i16,
                                eventname: String)
                                -> Result<()> {
-    let person_id = authorize_person_as(conn, login, Some(password), PersonType::Organizer)?;
+    let person_id = authorize_person_as(conn, &login, Some(&password), PersonType::Organizer)?;
 
-    let speaker_id = authorize_person_as(conn, speakerlogin, None, PersonType::Whatever)?;
+    let speaker_id = authorize_person_as(conn, &speakerlogin, None, PersonType::Whatever)?;
 
     let event_id: Option<i32> = if eventname.is_empty() {
         None
@@ -165,7 +165,7 @@ pub fn register_user_for_event(conn: &Connection,
                                password: String,
                                eventname: String)
                                -> Result<()> {
-    let person_id = authorize_person_as(conn, login, Some(password), PersonType::Participant)?;
+    let person_id = authorize_person_as(conn, &login, Some(&password), PersonType::Participant)?;
 
     let event_id: i32 =
         conn.query(r#"
@@ -189,7 +189,7 @@ pub fn register_user_for_event(conn: &Connection,
 /// (*U) attendance <login> <password> <talk>
 /// odnotowanie faktycznej obecności uczestnika <login> na referacie <talk>
 pub fn attendance(conn: &Connection, login: String, password: String, talk: String) -> Result<()> {
-    let person_id = authorize_person_as(conn, login, Some(password), PersonType::Participant)?;
+    let person_id = authorize_person_as(conn, &login, Some(&password), PersonType::Participant)?;
 
     let talk_id: i32 = conn.query(r#"
             SELECT id FROM talks WHERE talk=$1 LIMIT 1"#,
@@ -217,7 +217,7 @@ pub fn evaluation(conn: &Connection,
                   talk: String,
                   rating: i16)
                   -> Result<()> {
-    let person_id = authorize_person_as(conn, login, Some(password), PersonType::Participant)?;
+    let person_id = authorize_person_as(conn, &login, Some(&password), PersonType::Participant)?;
 
     let talk_id: i32 = conn.query(r#"
             SELECT id FROM talks WHERE talk=$1 LIMIT 1"#,
@@ -244,7 +244,7 @@ pub fn reject_spontaneous_talk(conn: &Connection,
                                password: String,
                                talk: String)
                                -> Result<()> {
-    authorize_person_as(conn, login, Some(password), PersonType::Organizer)?;
+    authorize_person_as(conn, &login, Some(&password), PersonType::Organizer)?;
 
     let rejected: i16 = TalkStatus::Rejected.into();
     let proposed: i16 = TalkStatus::Proposed.into();
@@ -271,7 +271,7 @@ pub fn propose_spontaneous_talk(conn: &Connection,
                                 title: String,
                                 start_timestamp: DateTime)
                                 -> Result<()> {
-    let speaker_id = authorize_person_as(conn, login, Some(password), PersonType::Participant)?;
+    let speaker_id = authorize_person_as(conn, &login, Some(&password), PersonType::Participant)?;
     let status: i16 = TalkStatus::Proposed.into();
 
     // insert a new proposal
@@ -293,8 +293,8 @@ pub fn make_friends(conn: &Connection,
                     password: String,
                     login2: String)
                     -> Result<()> {
-    let person1_id = authorize_person_as(conn, login1, Some(password), PersonType::Participant)?;
-    let person2_id = authorize_person_as(conn, login2, None, PersonType::Participant)?;
+    let person1_id = authorize_person_as(conn, &login1, Some(&password), PersonType::Participant)?;
+    let person2_id = authorize_person_as(conn, &login2, None, PersonType::Participant)?;
 
     conn.execute(r#"
             INSERT INTO person_knows_person (person1_id, person2_id)
@@ -312,7 +312,7 @@ pub fn make_friends(conn: &Connection,
 /// Atrybuty zwracanych krotek:
 ///   <login> <talk> <start_timestamp> <title> <room>
 pub fn user_plan(conn: &Connection, login: String, limit: u32) -> Result<Vec<UserPlan>> {
-    let person_id = authorize_person_as(conn, login.clone(), None, PersonType::Whatever)?;
+    let person_id = authorize_person_as(conn, &login, None, PersonType::Whatever)?;
 
     let limit = if limit == 0 {
         "".to_owned()
@@ -373,7 +373,7 @@ pub fn attended_talks(conn: &Connection,
                       login: String,
                       password: String)
                       -> Result<Vec<AttendedTalk>> {
-    let person_id = authorize_person_as(conn, login, Some(password), PersonType::Participant)?;
+    let person_id = authorize_person_as(conn, &login, Some(&password), PersonType::Participant)?;
 
     let attended_talks: Vec<_> = conn.query(r#"
             SELECT talk, start_timestamp, title, room
@@ -443,8 +443,8 @@ enum PersonType {
 
 #[cfg_attr(rustfmt, rustfmt_skip)]
 fn authorize_person_as(conn: &Connection,
-                       login: String,
-                       password: Option<String>,
+                       login: &str,
+                       password: Option<&str>,
                        person_type: PersonType)
                        -> Result<i32> {
     use self::PersonType::*;
@@ -455,7 +455,7 @@ fn authorize_person_as(conn: &Connection,
     };
 
     match password {
-        Some(password) => conn.query(&format!(
+        Some(ref password) => conn.query(&format!(
                 r#"SELECT id FROM persons WHERE login=$1 AND password=$2 {} LIMIT 1"#,
                     organizer_part)[..],
                 &[&login, &password]
