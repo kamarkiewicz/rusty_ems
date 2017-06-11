@@ -432,20 +432,24 @@ pub fn best_talks(conn: &Connection,
     let all = if all {
         ""
     } else {
-        "JOIN person_attended_for_talk USING(person_id, talk_id)"
+        r#"WHERE is_organizer = TRUE
+             OR (person_id, talk_id) IN (SELECT * FROM person_attended_for_talk)"#
     };
     let status: i16 = TalkStatus::Accepted.into();
 
     let query = format!(r#"
-        WITH cte(id, average_rate) AS (
-          SELECT talk_id, AVG(rating)
+        WITH cte(talk_id, average_rate) AS (
+          SELECT talk_id, avg(rating)
           FROM person_rated_talk
-            {}
+            JOIN persons ON persons.id = person_id
+            JOIN talks ON talks.id = talk_id
+            JOIN events ON events.id = event_id
+          {}
           GROUP BY talk_id
         )
         SELECT talk, start_timestamp, title, room
         FROM talks
-          JOIN cte USING(id)
+          JOIN cte ON cte.talk_id = talks.id
         WHERE status = $1
           AND start_timestamp >= $2
           AND start_timestamp <= $3
