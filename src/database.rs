@@ -460,17 +460,24 @@ pub fn most_popular_talks(conn: &Connection,
     } else {
         format!("LIMIT {}", limit)
     };
-    let status: i16 = TalkStatus::Accepted.into();
-    /// TODO: IMPL THE QUERY
     let query = format!(r#"
-            SELECT talk, start_timestamp, title, room
-            FROM talks
-            WHERE status = $1 AND
-                  start_timestamp >= $2 AND end_timestamp <= $3
-            ORDER BY room, start_timestamp {}"#,
-                        limit);
-    let talks: Vec<_> = conn.query(&query[..], &[&status, &start_timestamp, &end_timestamp])
-        .chain_err(|| "Unable to load day plan")?
+        WITH simple AS (
+          SELECT talk_id AS id, COUNT(person_id) AS arrivals
+          FROM person_attended_for_talk
+          GROUP BY talk_id
+        )
+        SELECT talk, start_timestamp, title, room
+        FROM talks
+          JOIN simple USING(id)
+        WHERE status = $1
+          AND start_timestamp >= $2
+          AND start_timestamp <= $3
+        ORDER BY arrivals DESC
+        {}"#, limit);
+    let status: i16 = TalkStatus::Accepted.into();
+    let talks: Vec<_> = conn.query(&query[..],
+            &[&status, &start_timestamp, &end_timestamp])
+        .chain_err(|| "Unable to load most popular talks")?
         .iter()
         .map(|row| {
                  MostPopularTalk {
