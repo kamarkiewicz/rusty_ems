@@ -461,14 +461,14 @@ pub fn most_popular_talks(conn: &Connection,
         format!("LIMIT {}", limit)
     };
     let query = format!(r#"
-        WITH simple AS (
+        WITH cte AS (
           SELECT talk_id AS id, COUNT(person_id) AS arrivals
           FROM person_attended_for_talk
           GROUP BY talk_id
         )
         SELECT talk, start_timestamp, title, room
         FROM talks
-          JOIN simple USING(id)
+          JOIN cte USING(id)
         WHERE status = $1
           AND start_timestamp >= $2
           AND start_timestamp <= $3
