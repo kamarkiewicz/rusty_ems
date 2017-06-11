@@ -152,8 +152,8 @@ pub enum Request {
         password: String,
         talk: String,
         title: String,
-        #[serde(with = "timestamp_fmt")]
-        start_timestamp: Timestamp,
+        #[serde(with = "datetime_fmt")]
+        start_timestamp: DateTime,
     },
 
     Friends {

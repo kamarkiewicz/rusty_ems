@@ -19,7 +19,7 @@ CREATE TABLE talks (
 	title varchar NOT NULL,
 	speaker_id integer NOT NULL REFERENCES persons (id),
 	event_id integer REFERENCES events (id),
-	room varchar NOT NULL,
+	room varchar,
 	start_timestamp timestamp NOT NULL,
 	add_timestamp timestamp NOT NULL DEFAULT now()
 );
