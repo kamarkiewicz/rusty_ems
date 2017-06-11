@@ -22,8 +22,9 @@ pub fn create_organizer_account(conn: &Connection,
                                 newlogin: String,
                                 newpassword: String)
                                 -> Result<()> {
-    conn.execute(r#"INSERT INTO persons (login, password, is_organizer)
-                    VALUES ($1, $2, TRUE)"#,
+    conn.execute(r#"
+            INSERT INTO persons (login, password, is_organizer)
+            VALUES ($1, $2, TRUE)"#,
                  &[&newlogin, &newpassword])
         .chain_err(|| "Unable to insert organizer person")?;
     Ok(())
@@ -41,8 +42,9 @@ pub fn create_event(conn: &Connection,
     authorize_person_as(conn, login, Some(password), PersonType::Organizer)?;
 
     // insert new event
-    conn.execute(r#"INSERT INTO events (eventname, start_timestamp, end_timestamp)
-                    VALUES ($1, $2, $3)"#,
+    conn.execute(r#"
+            INSERT INTO events (eventname, start_timestamp, end_timestamp)
+            VALUES ($1, $2, $3)"#,
                  &[&eventname, &start_timestamp, &end_timestamp])
         .chain_err(|| "Unable to insert event")?;
 
@@ -64,8 +66,9 @@ pub fn create_user(conn: &Connection,
     authorize_person_as(conn, login, Some(password), PersonType::Organizer)?;
 
     // insert new person
-    conn.execute(r#"INSERT INTO persons (login, password, is_organizer)
-                    VALUES ($1, $2, FALSE)"#,
+    conn.execute(r#"
+            INSERT INTO persons (login, password, is_organizer)
+            VALUES ($1, $2, FALSE)"#,
                  &[&newlogin, &newpassword])
         .chain_err(|| "Unable to insert participant person")?;
 
@@ -105,9 +108,8 @@ pub fn register_user_for_event(conn: &Connection,
                                -> Result<()> {
     let person_id = authorize_person_as(conn, login, Some(password), PersonType::Participant)?;
 
-    let event_id: i32 = conn.query(r#"SELECT id FROM events
-                                  WHERE eventname=$1
-                                  LIMIT 1"#,
+    let event_id: i32 = conn.query(r#"
+            SELECT id FROM events WHERE eventname=$1 LIMIT 1"#,
                                    &[&eventname])
         .chain_err(|| "Unable to load event")?
         .iter()
@@ -115,8 +117,9 @@ pub fn register_user_for_event(conn: &Connection,
         .next()
         .ok_or_else(|| "NotFound")?;
 
-    conn.execute(r#"INSERT INTO person_registered_for_event (person_id, event_id)
-                    VALUES ($1, $2)"#,
+    conn.execute(r#"
+            INSERT INTO person_registered_for_event (person_id, event_id)
+            VALUES ($1, $2)"#,
                  &[&person_id, &event_id])
         .chain_err(|| "Person can't be registered for event")?;
 

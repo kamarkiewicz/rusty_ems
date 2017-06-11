@@ -1,8 +1,8 @@
 CREATE TABLE persons (
-  id serial PRIMARY KEY,
-  login varchar NOT NULL UNIQUE,
-  password varchar NOT NULL,
-  is_organizer boolean NOT NULL DEFAULT false
+	id serial PRIMARY KEY,
+	login varchar NOT NULL UNIQUE,
+	password varchar NOT NULL,
+	is_organizer boolean NOT NULL DEFAULT false
 );
 
 CREATE TABLE events (
@@ -14,10 +14,12 @@ CREATE TABLE events (
 
 CREATE TABLE talks (
 	id serial PRIMARY KEY,
-  title varchar NOT NULL UNIQUE,
+	talk varchar NOT NULL UNIQUE,
 	status smallint NOT NULL,
-	person_id integer NOT NULL REFERENCES persons (id),
+	title varchar NOT NULL,
+	speaker_id integer NOT NULL REFERENCES persons (id),
 	event_id integer REFERENCES events (id),
+	room varchar NOT NULL,
 	start_timestamp timestamp NOT NULL,
 	add_timestamp timestamp NOT NULL DEFAULT now()
 );
@@ -43,6 +45,6 @@ CREATE TABLE person_attended_for_talk (
 CREATE TABLE person_rated_talk (
 	person_id integer REFERENCES persons (id),
 	talk_id integer REFERENCES talks (id),
-  rating smallint,
+	rating smallint,
 	PRIMARY KEY (person_id, talk_id)
 );
