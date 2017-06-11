@@ -473,10 +473,10 @@ pub fn most_popular_talks(conn: &Connection,
           AND start_timestamp >= $2
           AND start_timestamp <= $3
         ORDER BY arrivals DESC
-        {}"#, limit);
+        {}"#,
+                        limit);
     let status: i16 = TalkStatus::Accepted.into();
-    let talks: Vec<_> = conn.query(&query[..],
-            &[&status, &start_timestamp, &end_timestamp])
+    let talks: Vec<_> = conn.query(&query[..], &[&status, &start_timestamp, &end_timestamp])
         .chain_err(|| "Unable to load most popular talks")?
         .iter()
         .map(|row| {
