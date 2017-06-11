@@ -577,7 +577,6 @@ pub fn abandoned_talks(conn: &Connection,
         format!("LIMIT {}", limit)
     };
 
-    // TODO: FIX THIS QUERY
     let query = format!(r#"
         WITH person_registered_for_talk(person_id, talk_id) AS (
           SELECT person_id, talks.id
