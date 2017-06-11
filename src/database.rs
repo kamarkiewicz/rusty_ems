@@ -1,6 +1,9 @@
 use errors::*;
 
-use api::{Date, DateTime, AttendedTalk, UserPlan, DayPlan};
+use api::{Date, DateTime};
+#[allow(unused_imports)]
+use api::{AttendedTalk, UserPlan, DayPlan, BestTalk, MostPopularTalk, AbandonedTalk,
+          RecentlyAddedTalk, RejectedTalk, Proposal, FriendsTalk, FriendsEvent, RecommendedTalk};
 
 pub use postgres::{Connection, TlsMode};
 

@@ -86,6 +86,10 @@ impl<T> StrOr<T>
     }
 }
 
+// ================================================
+//                    REQUESTS
+// ================================================
+
 #[derive(Debug, Deserialize, PartialEq)]
 #[serde(rename_all = "snake_case")]
 pub enum Request {
@@ -236,18 +240,32 @@ pub enum Request {
     },
 }
 
+// ================================================
+//                    RESPONSES
+// ================================================
+
 pub enum Response {
     #[allow(dead_code)]
     Ok(ResponseInfo),
     NotImplemented,
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Serialize, PartialEq)]
 #[serde(untagged)]
 pub enum ResponseInfo {
     AttendedTalks(Vec<AttendedTalk>),
     UserPlans(Vec<UserPlan>),
     DayPlans(Vec<DayPlan>),
+    BestTalks(Vec<BestTalk>),
+    MostPopularTalks(Vec<MostPopularTalk>),
+    AbandonedTalks(Vec<AbandonedTalk>),
+    RecentlyAddedTalks(Vec<RecentlyAddedTalk>),
+    RejectedTalks(Vec<RejectedTalk>),
+    Proposals(Vec<Proposal>),
+    FriendsTalks(Vec<FriendsTalk>),
+    FriendsEvents(Vec<FriendsEvent>),
+    RecommendedTalks(Vec<RecommendedTalk>),
     Empty,
 }
 
@@ -278,6 +296,95 @@ pub struct DayPlan {
     pub title: String,
     pub room: String,
 }
+
+#[derive(Debug, Serialize, PartialEq)]
+pub struct BestTalk {
+    pub talk: String,
+    #[serde(with = "datetime_fmt")]
+    pub start_timestamp: DateTime,
+    pub title: String,
+    pub room: String,
+}
+
+#[derive(Debug, Serialize, PartialEq)]
+pub struct MostPopularTalk {
+    pub talk: String,
+    #[serde(with = "datetime_fmt")]
+    pub start_timestamp: DateTime,
+    pub title: String,
+    pub room: String,
+}
+
+#[derive(Debug, Serialize, PartialEq)]
+pub struct AbandonedTalk {
+    pub talk: String,
+    #[serde(with = "datetime_fmt")]
+    pub start_timestamp: DateTime,
+    pub title: String,
+    pub room: String,
+    pub number: u32,
+}
+
+#[derive(Debug, Serialize, PartialEq)]
+pub struct RecentlyAddedTalk {
+    pub talk: String,
+    #[serde(with = "datetime_fmt")]
+    pub start_timestamp: DateTime,
+    pub title: String,
+    pub room: String,
+    pub number: u32,
+}
+
+#[derive(Debug, Serialize, PartialEq)]
+pub struct RejectedTalk {
+    pub talk: String,
+    #[serde(with = "datetime_fmt")]
+    pub start_timestamp: DateTime,
+    pub title: String,
+    pub room: String,
+    pub number: u32,
+}
+
+#[derive(Debug, Serialize, PartialEq)]
+pub struct Proposal {
+    pub talk: String,
+    #[serde(with = "datetime_fmt")]
+    pub start_timestamp: DateTime,
+    pub title: String,
+    pub room: String,
+    pub number: u32,
+}
+
+#[derive(Debug, Serialize, PartialEq)]
+pub struct FriendsTalk {
+    pub talk: String,
+    #[serde(with = "datetime_fmt")]
+    pub start_timestamp: DateTime,
+    pub title: String,
+    pub room: String,
+    pub number: u32,
+}
+
+#[derive(Debug, Serialize, PartialEq)]
+pub struct FriendsEvent {
+    pub talk: String,
+    #[serde(with = "datetime_fmt")]
+    pub start_timestamp: DateTime,
+    pub title: String,
+    pub room: String,
+    pub number: u32,
+}
+
+#[derive(Debug, Serialize, PartialEq)]
+pub struct RecommendedTalk {
+    pub talk: String,
+    #[serde(with = "datetime_fmt")]
+    pub start_timestamp: DateTime,
+    pub title: String,
+    pub room: String,
+    pub number: u32,
+}
+
 
 static SECRET: &str = "d8578edf8458ce06fbc5bb76a58c5ca4";
 
