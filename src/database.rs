@@ -72,7 +72,7 @@ pub fn create_user(conn: &Connection,
             INSERT INTO persons (login, password, is_organizer)
             VALUES ($1, $2, FALSE)"#,
                  &[&newlogin, &newpassword])
-        .chain_err(|| "Unable to insert participant person")?;
+        .chain_err(|| "Unable to insert User person")?;
 
     Ok(())
 }
@@ -168,7 +168,7 @@ pub fn register_user_for_event(conn: &Connection,
                                password: String,
                                eventname: String)
                                -> Result<()> {
-    let person_id = authorize_person_as(conn, &login, Some(&password), PersonType::Participant)?;
+    let person_id = authorize_person_as(conn, &login, Some(&password), PersonType::User)?;
 
     let event_id: i32 =
         conn.query(r#"
@@ -192,7 +192,7 @@ pub fn register_user_for_event(conn: &Connection,
 /// (*U) attendance <login> <password> <talk>
 /// odnotowanie faktycznej obecności uczestnika <login> na referacie <talk>
 pub fn attendance(conn: &Connection, login: String, password: String, talk: String) -> Result<()> {
-    let person_id = authorize_person_as(conn, &login, Some(&password), PersonType::Participant)?;
+    let person_id = authorize_person_as(conn, &login, Some(&password), PersonType::User)?;
 
     let talk_id: i32 = conn.query(r#"
             SELECT id FROM talks WHERE talk=$1 LIMIT 1"#,
@@ -207,7 +207,7 @@ pub fn attendance(conn: &Connection, login: String, password: String, talk: Stri
             INSERT INTO person_attended_for_talk (person_id, talk_id)
             VALUES ($1, $2)"#,
                  &[&person_id, &talk_id])
-        .chain_err(|| "Unable to mark attendance of participant for the talk")?;
+        .chain_err(|| "Unable to mark attendance of User for the talk")?;
 
     Ok(())
 }
@@ -220,7 +220,7 @@ pub fn evaluation(conn: &Connection,
                   talk: String,
                   rating: i16)
                   -> Result<()> {
-    let person_id = authorize_person_as(conn, &login, Some(&password), PersonType::Participant)?;
+    let person_id = authorize_person_as(conn, &login, Some(&password), PersonType::User)?;
 
     let talk_id: i32 = conn.query(r#"
             SELECT id FROM talks WHERE talk=$1 LIMIT 1"#,
@@ -274,7 +274,7 @@ pub fn propose_spontaneous_talk(conn: &Connection,
                                 title: String,
                                 start_timestamp: DateTime)
                                 -> Result<()> {
-    let speaker_id = authorize_person_as(conn, &login, Some(&password), PersonType::Participant)?;
+    let speaker_id = authorize_person_as(conn, &login, Some(&password), PersonType::User)?;
     let status: i16 = TalkStatus::Proposed.into();
 
     // insert a new proposal
@@ -296,14 +296,14 @@ pub fn make_friends(conn: &Connection,
                     password: String,
                     login2: String)
                     -> Result<()> {
-    let person1_id = authorize_person_as(conn, &login1, Some(&password), PersonType::Participant)?;
-    let person2_id = authorize_person_as(conn, &login2, None, PersonType::Participant)?;
+    let person1_id = authorize_person_as(conn, &login1, Some(&password), PersonType::User)?;
+    let person2_id = authorize_person_as(conn, &login2, None, PersonType::User)?;
 
     conn.execute(r#"
             INSERT INTO person_knows_person (person1_id, person2_id)
             VALUES ($1, $2)"#,
                  &[&person1_id, &person2_id])
-        .chain_err(|| "These participants cannot be friends")?;
+        .chain_err(|| "These Users cannot be friends")?;
 
     Ok(())
 }
@@ -477,7 +477,7 @@ pub fn attended_talks(conn: &Connection,
                       login: String,
                       password: String)
                       -> Result<Vec<AttendedTalk>> {
-    let person_id = authorize_person_as(conn, &login, Some(&password), PersonType::Participant)?;
+    let person_id = authorize_person_as(conn, &login, Some(&password), PersonType::User)?;
 
     let talks: Vec<_> = conn.query(r#"
             SELECT talk, start_timestamp, title, room
@@ -580,7 +580,7 @@ pub fn abandoned_talks(conn: &Connection,
 
 enum PersonType {
     Whatever,
-    Participant,
+    User,
     Organizer,
 }
 
@@ -593,7 +593,7 @@ fn authorize_person_as(conn: &Connection,
     use self::PersonType::*;
     let organizer_part = match person_type {
         Whatever => "",
-        Participant => "AND is_organizer=FALSE",
+        User => "AND is_organizer=FALSE",
         Organizer => "AND is_organizer=TRUE",
     };
 
