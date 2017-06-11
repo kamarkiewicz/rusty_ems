@@ -175,7 +175,10 @@ pub fn register_user_for_event(conn: &Connection,
     let person_id = authorize_person_as(conn, &login, Some(&password), PersonType::User)?;
 
     let query = r#"
-        SELECT id FROM events WHERE eventname=$1 LIMIT 1"#;
+        SELECT id
+        FROM events
+        WHERE eventname = $1
+        LIMIT 1"#;
     let event_id: i32 =
         conn.query(query, &[&eventname])
             .chain_err(|| "Unable to load event")?
