@@ -135,7 +135,12 @@ impl Context {
                    login,
                    password,
                    talk
-               } => { Response::NotImplemented },
+               } => {
+                   let conn = self.conn.as_ref().ok_or("establish connection first")?;
+                   reject_spontaneous_talk(&conn, login, password, talk)
+                        .chain_err(|| "during Request::Reject")?;
+                   Response::Ok(ResponseInfo::Empty)
+               },
 
                Request::Proposal {
                    login,

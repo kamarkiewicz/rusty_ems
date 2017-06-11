@@ -238,6 +238,28 @@ pub fn evaluation(conn: &Connection,
 
 /// (O) reject <login> <password> <talk>
 /// usuwa referat spontaniczny <talk> z listy zaproponowanych,
+pub fn reject_spontaneous_talk(conn: &Connection,
+                               login: String,
+                               password: String,
+                               talk: String)
+                               -> Result<()> {
+    authorize_person_as(conn, login, Some(password), PersonType::Organizer)?;
+
+    let rejected: i16 = TalkStatus::Rejected.into();
+    let proposed: i16 = TalkStatus::Proposed.into();
+
+    // update a proposal
+    let updates = conn.execute(r#"
+            UPDATE talks SET status = $1 WHERE talk = $2 AND status = $3"#,
+                               &[&rejected, &talk, &proposed])
+        .chain_err(|| "Unable to reject a proposal")?;
+
+    if updates == 1 {
+        Ok(())
+    } else {
+        Err("There was no proposal to reject".into())
+    }
+}
 
 /// (U) proposal <login> <password> <talk> <title> <start_timestamp>
 /// propozycja referatu spontanicznego, <talk> - unikalny identyfikator referatu
