@@ -664,13 +664,19 @@ fn authorize_person_as(conn: &Connection,
     match password {
             Some(ref password) => {
                 let query = format!(r#"
-                    SELECT id FROM persons WHERE login=$1 AND password=$2 {} LIMIT 1"#,
+                    SELECT id FROM persons
+                    WHERE login = $1 AND password = $2
+                      {}
+                    LIMIT 1"#,
                                     organizer_part);
                 conn.query(&query[..], &[&login, &password])
             }
             None => {
                 let query = format!(r#"
-                    SELECT id FROM persons WHERE login=$1 {} LIMIT 1"#,
+                    SELECT id FROM persons
+                    WHERE login = $1
+                      {}
+                    LIMIT 1"#,
                                     organizer_part);
                 conn.query(&query[..], &[&login])
             }
