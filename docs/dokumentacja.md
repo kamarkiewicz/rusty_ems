@@ -61,12 +61,12 @@ Po każdym zapytaniu program zwraca rezultat w formacie JSON.
  - `(*N) most_popular_talks <start_timestamp> <end_timestamp> <limit>`
  - `(*U) attended_talks <login> <password>`
  - `(*O) abandoned_talks <login> <password> <limit>`
-
- ### Niezaimplementowane zapytania
- 
  - `(N) recently_added_talks <limit>`
  - `(U/O) rejected_talks <login> <password>`
  - `(O) proposals <login> <password>`
+
+ ### Niezaimplementowane zapytania
+ 
  - `(U) friends_talks <login> <password> <start_timestamp> <end_timestamp> <limit>`
  - `(U) friends_events <login> <password> <eventname>`
  - `(U) recommended_talks <login> <password> <start_timestamp> <end_timestamp> <limit>`
