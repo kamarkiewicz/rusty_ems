@@ -94,21 +94,12 @@ pub fn create_user(conn: &Connection,
     Ok(())
 }
 
+#[derive(Debug, ToSql, FromSql)]
+#[postgres(name = "talk_status")]
 pub enum TalkStatus {
     Proposed,
     Accepted,
     Rejected,
-}
-
-impl From<TalkStatus> for i16 {
-    fn from(status: TalkStatus) -> Self {
-        use self::TalkStatus::*;
-        match status {
-            Proposed => 0,
-            Accepted => 1,
-            Rejected => 2,
-        }
-    }
 }
 
 /// (*O) talk <login> <password>
@@ -144,7 +135,7 @@ pub fn register_or_accept_talk(conn: &Connection,
     } else {
         None
     };
-    let status: i16 = TalkStatus::Accepted.into();
+    let status = TalkStatus::Accepted;
 
     // upsert a talk
     let query = r#"
@@ -249,7 +240,7 @@ pub fn evaluation(conn: &Connection,
 
     let person_id = authorize_person_as(conn, &login, Some(&password), PersonType::User)?;
 
-    let status: i16 = TalkStatus::Accepted.into();
+    let status = TalkStatus::Accepted;
     let query = r#"
         SELECT id
         FROM talks
@@ -282,8 +273,8 @@ pub fn reject_spontaneous_talk(conn: &Connection,
 
     authorize_person_as(conn, &login, Some(&password), PersonType::Organizer)?;
 
-    let rejected: i16 = TalkStatus::Rejected.into();
-    let proposed: i16 = TalkStatus::Proposed.into();
+    let rejected = TalkStatus::Rejected;
+    let proposed = TalkStatus::Proposed;
 
     // update a proposal
     let query = r#"
@@ -311,7 +302,7 @@ pub fn propose_spontaneous_talk(conn: &Connection,
                                 -> Result<()> {
 
     let speaker_id = authorize_person_as(conn, &login, Some(&password), PersonType::User)?;
-    let status: i16 = TalkStatus::Proposed.into();
+    let status = TalkStatus::Proposed;
 
     // insert a new proposal
     let query = r#"
@@ -360,7 +351,7 @@ pub fn user_plan(conn: &Connection, login: String, limit: u32) -> Result<Vec<Use
         format!("LIMIT {}", limit)
     };
 
-    let status: i16 = TalkStatus::Accepted.into();
+    let status = TalkStatus::Accepted;
     let query = format!(r#"
         WITH cte(person_id, speakerlogin, talk, start_timestamp, title, room) AS (
           SELECT person_id, login, talk, start_timestamp, title, room
@@ -400,7 +391,7 @@ pub fn user_plan(conn: &Connection, login: String, limit: u32) -> Result<Vec<Use
 ///  <talk> <start_timestamp> <title> <room>
 pub fn day_plan(conn: &Connection, date: Date) -> Result<Vec<DayPlan>> {
 
-    let status: i16 = TalkStatus::Accepted.into();
+    let status = TalkStatus::Accepted;
     let query = r#"
         SELECT talk, start_timestamp, title, room
         FROM talks
@@ -448,7 +439,7 @@ pub fn best_talks(conn: &Connection,
         r#"WHERE is_organizer = TRUE
              OR (person_id, talk_id) IN (SELECT * FROM person_attended_for_talk)"#
     };
-    let status: i16 = TalkStatus::Accepted.into();
+    let status = TalkStatus::Accepted;
 
     let query = format!(r#"
         WITH cte(talk_id, average_rate) AS (
@@ -517,7 +508,7 @@ pub fn most_popular_talks(conn: &Connection,
         ORDER BY arrivals DESC
         {}"#,
                         limit);
-    let status: i16 = TalkStatus::Accepted.into();
+    let status = TalkStatus::Accepted;
     let talks: Vec<_> = conn.query(&query[..], &[&status, &start_timestamp, &end_timestamp])
         .chain_err(|| "Unable to load most popular talks")?
         .iter()

@@ -12,10 +12,12 @@ CREATE TABLE events (
 	end_timestamp timestamp NOT NULL
 );
 
+CREATE TYPE talk_status AS ENUM ('Proposed', 'Accepted', 'Rejected');
+
 CREATE TABLE talks (
 	id serial PRIMARY KEY,
 	talk varchar NOT NULL UNIQUE,
-	status smallint NOT NULL,
+	status talk_status NOT NULL,
 	title varchar NOT NULL,
 	speaker_id integer NOT NULL REFERENCES persons (id),
 	event_id integer REFERENCES events (id),
