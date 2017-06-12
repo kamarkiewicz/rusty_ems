@@ -252,7 +252,12 @@ impl Context {
                    Response::Ok(ResponseInfo::RecentlyAddedTalks(talks))
                },
 
-               Request::RejectedTalks { login, password } => { Response::NotImplemented },
+               Request::RejectedTalks { login, password } => {
+                   let conn = self.conn.as_ref().ok_or("establish connection first")?;
+                   let talks = rejected_talks(&conn, login, password)
+                        .chain_err(|| "during Request::RejectedTalks")?;
+                   Response::Ok(ResponseInfo::RejectedTalks(talks))
+               },
 
                Request::Proposals { login, password } => { Response::NotImplemented },
 

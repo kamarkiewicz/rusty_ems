@@ -632,7 +632,7 @@ pub fn recently_added_talks(conn: &Connection, limit: u32) -> Result<Vec<Recentl
     };
 
     let query = format!(r#"
-        SELECT talk, login as speakerlogin, start_timestamp, title, room
+        SELECT talk, login AS speakerlogin, start_timestamp, title, room
         FROM talks
           JOIN persons ON persons.id = talks.speaker_id
         WHERE status = $1
@@ -660,6 +660,51 @@ pub fn recently_added_talks(conn: &Connection, limit: u32) -> Result<Vec<Recentl
 /// jeśli wywołujący ma uprawnienia organizatora zwraca listę wszystkich odrzuconych referatów
 /// spontanicznych, w przeciwnym przypadku listę odrzuconych referatów wywołującego ją uczestnika
 ///  <talk> <speakerlogin> <start_timestamp> <title>
+pub fn rejected_talks(conn: &Connection,
+                      login: String,
+                      password: String)
+                      -> Result<Vec<RejectedTalk>> {
+
+    let (typ, person_id) =
+        authorize_person_as(conn, &login, Some(&password), PersonType::Organizer)
+            .map(|id| (PersonType::Organizer, id))
+            .or(authorize_person_as(conn, &login, Some(&password), PersonType::User)
+                    .map(|id| (PersonType::User, id)))?;
+
+    let talks: Vec<_> = match typ {
+            PersonType::Organizer => {
+                let query = r#"
+                SELECT talk, login AS speakerlogin, start_timestamp, title
+                FROM talks
+                  JOIN persons ON persons.id = talks.speaker_id
+                WHERE status = $1"#;
+                conn.query(&query[..], &[&TalkStatus::Rejected])
+            }
+            PersonType::User => {
+                let query = r#"
+                SELECT talk, login AS speakerlogin, start_timestamp, title
+                FROM talks
+                  JOIN persons ON persons.id = talks.speaker_id
+                WHERE status = $1
+                  AND talks.speaker_id = $2"#;
+                conn.query(&query[..], &[&TalkStatus::Rejected, &person_id])
+            }
+            PersonType::Whatever => unreachable!(),
+        }
+        .chain_err(|| "Unable to load rejected talks")?
+        .iter()
+        .map(|row| {
+                 RejectedTalk {
+                     talk: row.get("talk"),
+                     speakerlogin: row.get("speakerlogin"),
+                     start_timestamp: row.get("start_timestamp"),
+                     title: row.get("title"),
+                 }
+             })
+        .collect();
+
+    Ok(talks)
+}
 
 /// (O) proposals <login> <password>
 /// zwraca listę propozycji referatów spontanicznych do zatwierdzenia lub odrzucenia,
