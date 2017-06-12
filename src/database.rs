@@ -19,7 +19,14 @@ pub fn establish_connection(login: String, password: String, baza: String) -> Re
 
 /// Sprawdza, czy połączona baza zawiera odpowiednią strukturę tabel.
 /// Przeprowadza migrację jeśli jest taka potrzeba.
+/// Pozyskuje zawartość skryptu tworzącego bazę w trakcie kompilacji.
 pub fn setup_database(conn: &Connection) -> Result<()> {
+    let up_sql = include_str!("../migrations/20170529191530_base/up.sql");
+    let check_sql = include_str!("../migrations/20170529191530_base/check.sql");
+    if conn.batch_execute(check_sql).is_err() {
+        conn.batch_execute(up_sql)
+            .expect("Unable to setup a database");
+    }
     Ok(())
 }
 
