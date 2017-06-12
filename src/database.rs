@@ -821,9 +821,9 @@ pub fn friends_events(conn: &Connection,
         )
         SELECT login AS friendlogin
         FROM person_registered_for_event
+          JOIN persons ON persons.id = person_id
           JOIN friends ON friends.id = person_id
-          JOIN events ON events.id = event_id
-          JOIN persons ON persons.id = person_id"#;
+          JOIN events ON events.id = event_id"#;
     let talks: Vec<_> = conn.query(&query[..], &[&person_id])
         .chain_err(|| "Unable to load friends events")?
         .iter()
