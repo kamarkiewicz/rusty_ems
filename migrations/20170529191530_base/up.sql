@@ -23,7 +23,7 @@ CREATE TABLE talks (
 	event_id integer REFERENCES events (id),
 	room varchar,
 	start_timestamp timestamp NOT NULL,
-	add_timestamp timestamp NOT NULL DEFAULT now()
+	modified_at timestamp NOT NULL DEFAULT now()
 );
 
 CREATE TABLE person_knows_person (

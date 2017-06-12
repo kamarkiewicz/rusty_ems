@@ -153,7 +153,8 @@ pub fn register_or_accept_talk(conn: &Connection,
           title = EXCLUDED.title,
           start_timestamp = EXCLUDED.start_timestamp,
           room = EXCLUDED.room,
-          event_id = EXCLUDED.event_id
+          event_id = EXCLUDED.event_id,
+          modified_at = now()
         RETURNING id"#;
     let talk_id: i32 = conn.query(query,
                                   &[&talk,
