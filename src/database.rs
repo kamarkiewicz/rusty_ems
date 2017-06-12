@@ -142,7 +142,6 @@ pub fn register_or_accept_talk(conn: &Connection,
     } else {
         None
     };
-    let status = TalkStatus::Accepted;
 
     // upsert a talk
     let query = r#"
@@ -159,7 +158,7 @@ pub fn register_or_accept_talk(conn: &Connection,
     let talk_id: i32 = conn.query(query,
                                   &[&talk,
                                     &speaker_id,
-                                    &status,
+                                    &TalkStatus::Accepted,
                                     &title,
                                     &start_timestamp,
                                     &room,
@@ -251,13 +250,12 @@ pub fn evaluation(conn: &Connection,
 
     let person_id = authorize_person_as(conn, &login, Some(&password), PersonType::User)?;
 
-    let status = TalkStatus::Accepted;
     let query = r#"
         SELECT id FROM talks
         WHERE talk = $1
           AND status = $2
         LIMIT 1"#;
-    let talk_id: i32 = conn.query(query, &[&talk, &status])
+    let talk_id: i32 = conn.query(query, &[&talk, &TalkStatus::Accepted])
         .chain_err(|| "Unable to load the talk")?
         .iter()
         .map(|row| row.get("id"))
@@ -283,16 +281,14 @@ pub fn reject_spontaneous_talk(conn: &Connection,
 
     authorize_person_as(conn, &login, Some(&password), PersonType::Organizer)?;
 
-    let rejected = TalkStatus::Rejected;
-    let proposed = TalkStatus::Proposed;
-
     // update a proposal
     let query = r#"
         UPDATE talks
         SET status = $1
         WHERE talk = $2
           AND status = $3"#;
-    let updates = conn.execute(query, &[&rejected, &talk, &proposed])
+    let updates = conn.execute(query,
+                               &[&TalkStatus::Rejected, &talk, &TalkStatus::Proposed])
         .chain_err(|| "Unable to reject a proposal")?;
     if updates != 1 {
         bail!("There was no proposal to reject")
@@ -312,14 +308,17 @@ pub fn propose_spontaneous_talk(conn: &Connection,
                                 -> Result<()> {
 
     let speaker_id = authorize_person_as(conn, &login, Some(&password), PersonType::User)?;
-    let status = TalkStatus::Proposed;
 
     // insert a new proposal
     let query = r#"
         INSERT INTO talks (speaker_id, talk, status, title, start_timestamp)
         VALUES ($1, $2, $3, $4, $5)"#;
     conn.execute(query,
-                 &[&speaker_id, &talk, &status, &title, &start_timestamp])
+                 &[&speaker_id,
+                   &talk,
+                   &TalkStatus::Proposed,
+                   &title,
+                   &start_timestamp])
         .chain_err(|| "Unable to insert a proposal")?;
 
     Ok(())
@@ -361,7 +360,6 @@ pub fn user_plan(conn: &Connection, login: String, limit: u32) -> Result<Vec<Use
         format!("LIMIT {}", limit)
     };
 
-    let status = TalkStatus::Accepted;
     let query = format!(r#"
         WITH cte(person_id, speakerlogin, talk, start_timestamp, title, room) AS (
           SELECT person_id, login, talk, start_timestamp, title, room
@@ -378,7 +376,7 @@ pub fn user_plan(conn: &Connection, login: String, limit: u32) -> Result<Vec<Use
         ORDER BY start_timestamp
         {}"#,
                         limit);
-    let plans: Vec<_> = conn.query(&query[..], &[&status, &login])
+    let plans: Vec<_> = conn.query(&query[..], &[&TalkStatus::Accepted, &login])
         .chain_err(|| "Unable to load person's plan")?
         .iter()
         .map(|row| {
@@ -401,14 +399,13 @@ pub fn user_plan(conn: &Connection, login: String, limit: u32) -> Result<Vec<Use
 ///  <talk> <start_timestamp> <title> <room>
 pub fn day_plan(conn: &Connection, date: Date) -> Result<Vec<DayPlan>> {
 
-    let status = TalkStatus::Accepted;
     let query = r#"
         SELECT talk, start_timestamp, title, room
         FROM talks
         WHERE status = $1
           AND start_timestamp::date = $2
         ORDER BY room, start_timestamp"#;
-    let plans: Vec<_> = conn.query(&query[..], &[&status, &date])
+    let plans: Vec<_> = conn.query(&query[..], &[&TalkStatus::Accepted, &date])
         .chain_err(|| "Unable to load day plan")?
         .iter()
         .map(|row| {
@@ -449,7 +446,6 @@ pub fn best_talks(conn: &Connection,
         r#"WHERE is_organizer = TRUE
              OR (person_id, talk_id) IN (SELECT * FROM person_attended_for_talk)"#
     };
-    let status = TalkStatus::Accepted;
 
     let query = format!(r#"
         WITH cte(talk_id, average_rate) AS (
@@ -471,7 +467,8 @@ pub fn best_talks(conn: &Connection,
         {}"#,
                         all,
                         limit);
-    let talks: Vec<_> = conn.query(&query[..], &[&status, &start_timestamp, &end_timestamp])
+    let talks: Vec<_> = conn.query(&query[..],
+                                   &[&TalkStatus::Accepted, &start_timestamp, &end_timestamp])
         .chain_err(|| "Unable to load best talks")?
         .iter()
         .map(|row| {
@@ -518,8 +515,8 @@ pub fn most_popular_talks(conn: &Connection,
         ORDER BY arrivals DESC
         {}"#,
                         limit);
-    let status = TalkStatus::Accepted;
-    let talks: Vec<_> = conn.query(&query[..], &[&status, &start_timestamp, &end_timestamp])
+    let talks: Vec<_> = conn.query(&query[..],
+                                   &[&TalkStatus::Accepted, &start_timestamp, &end_timestamp])
         .chain_err(|| "Unable to load most popular talks")?
         .iter()
         .map(|row| {
