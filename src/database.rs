@@ -801,6 +801,43 @@ pub fn friends_talks(conn: &Connection,
 /// (U) friends_events <login> <password> <eventname>
 /// lista znajomych uczestniczących w danym wydarzeniu
 ///  <login> <eventname> <friendlogin>
+pub fn friends_events(conn: &Connection,
+                      login: String,
+                      password: String,
+                      eventname: String)
+                      -> Result<Vec<FriendsEvent>> {
+
+    let person_id = authorize_person_as(conn, &login, Some(&password), PersonType::User)?;
+
+    let query = r#"
+        WITH friends(id) AS (
+            SELECT person2_id
+            FROM person_knows_person
+            JOIN (
+                SELECT person2_id AS person1_id, person1_id AS person2_id
+                FROM person_knows_person
+            ) AS reversed USING(person1_id, person2_id)
+            WHERE person1_id = $1
+        )
+        SELECT login AS friendlogin
+        FROM person_registered_for_event
+          JOIN friends ON friends.id = person_id
+          JOIN events ON events.id = event_id
+          JOIN persons ON persons.id = person_id"#;
+    let talks: Vec<_> = conn.query(&query[..], &[&person_id])
+        .chain_err(|| "Unable to load friends events")?
+        .iter()
+        .map(|row| {
+                 FriendsEvent {
+                     login: login.clone(),
+                     eventname: eventname.clone(),
+                     friendlogin: row.get("friendlogin"),
+                 }
+             })
+        .collect();
+
+    Ok(talks)
+}
 
 /// (U) recommended_talks <login> <password> <start_timestamp> <end_timestamp> <limit>
 /// zwraca referaty rozpoczynające się w podanym przedziale czasowym, które mogą zainteresować

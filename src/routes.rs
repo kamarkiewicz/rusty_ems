@@ -293,7 +293,12 @@ impl Context {
                    login,
                    password,
                    eventname
-               } => { Response::NotImplemented },
+               } => {
+                   let conn = self.conn.as_ref().ok_or("establish connection first")?;
+                   let talks = friends_events(&conn, login, password, eventname)
+                        .chain_err(|| "during Request::FriendsEvents")?;
+                   Response::Ok(ResponseInfo::FriendsEvents(talks))
+               },
 
                Request::RecommendedTalks {
                    login,

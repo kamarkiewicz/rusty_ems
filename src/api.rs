@@ -365,12 +365,9 @@ pub struct FriendsTalk {
 
 #[derive(Debug, Serialize, PartialEq)]
 pub struct FriendsEvent {
-    pub talk: String,
-    #[serde(with = "datetime_fmt")]
-    pub start_timestamp: DateTime,
-    pub title: String,
-    pub room: String,
-    pub number: u32,
+    pub login: String,
+    pub eventname: String,
+    pub friendlogin: String,
 }
 
 #[derive(Debug, Serialize, PartialEq)]
