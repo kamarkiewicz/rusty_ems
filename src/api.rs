@@ -347,11 +347,10 @@ pub struct RejectedTalk {
 #[derive(Debug, Serialize, PartialEq)]
 pub struct Proposal {
     pub talk: String,
+    pub speakerlogin: String,
     #[serde(with = "datetime_fmt")]
     pub start_timestamp: DateTime,
     pub title: String,
-    pub room: String,
-    pub number: u32,
 }
 
 #[derive(Debug, Serialize, PartialEq)]

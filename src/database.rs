@@ -711,6 +711,30 @@ pub fn rejected_talks(conn: &Connection,
 /// zatwierdzenie lub odrzucenie referatu polega na wywołaniu przez organizatora
 /// funkcji talk lub reject z odpowiednimi parametrami
 ///  <talk> <speakerlogin> <start_timestamp> <title>
+pub fn proposals(conn: &Connection, login: String, password: String) -> Result<Vec<Proposal>> {
+
+    authorize_person_as(conn, &login, Some(&password), PersonType::Organizer)?;
+
+    let query = r#"
+        SELECT talk, login AS speakerlogin, start_timestamp, title
+        FROM talks
+          JOIN persons ON persons.id = talks.speaker_id
+        WHERE status = $1"#;
+    let talks: Vec<_> = conn.query(query, &[&TalkStatus::Proposed])
+        .chain_err(|| "Unable to load proposals")?
+        .iter()
+        .map(|row| {
+                 Proposal {
+                     talk: row.get("talk"),
+                     speakerlogin: row.get("speakerlogin"),
+                     start_timestamp: row.get("start_timestamp"),
+                     title: row.get("title"),
+                 }
+             })
+        .collect();
+
+    Ok(talks)
+}
 
 /// (U) friends_talks <login> <password> <start_timestamp> <end_timestamp> <limit>
 /// lista referatów  rozpoczynających się w podanym przedziale czasowym wygłaszanych

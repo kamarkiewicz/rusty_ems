@@ -259,7 +259,12 @@ impl Context {
                    Response::Ok(ResponseInfo::RejectedTalks(talks))
                },
 
-               Request::Proposals { login, password } => { Response::NotImplemented },
+               Request::Proposals { login, password } => {
+                   let conn = self.conn.as_ref().ok_or("establish connection first")?;
+                   let talks = proposals(&conn, login, password)
+                        .chain_err(|| "during Request::Proposals")?;
+                   Response::Ok(ResponseInfo::Proposals(talks))
+               },
 
                Request::FriendsTalks {
                    login,
