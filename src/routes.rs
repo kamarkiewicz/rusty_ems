@@ -244,7 +244,13 @@ impl Context {
                    Response::Ok(ResponseInfo::AbandonedTalks(talks))
                },
 
-               Request::RecentlyAddedTalks { limit } => { Response::NotImplemented },
+               Request::RecentlyAddedTalks { limit } => {
+                   let conn = self.conn.as_ref().ok_or("establish connection first")?;
+                   let limit: u32 = limit.validate()?;
+                   let talks = recently_added_talks(&conn, limit)
+                        .chain_err(|| "during Request::RecentlyAddedTalks")?;
+                   Response::Ok(ResponseInfo::RecentlyAddedTalks(talks))
+               },
 
                Request::RejectedTalks { login, password } => { Response::NotImplemented },
 

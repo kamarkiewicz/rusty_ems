@@ -631,26 +631,15 @@ pub fn recently_added_talks(conn: &Connection, limit: u32) -> Result<Vec<Recentl
         format!("LIMIT {}", limit)
     };
 
-    // TODO: FIX THIS QUERY
     let query = format!(r#"
-        WITH person_registered_for_talk(person_id, talk_id) AS (
-          SELECT person_id, talks.id
-          FROM person_registered_for_event
-            JOIN talks USING(event_id)
-        ),
-        cte(talk_id, absent) AS (
-          SELECT talk_id, count(person_id)
-          FROM person_registered_for_talk
-          WHERE (person_id, talk_id) NOT IN (SELECT * FROM person_attended_for_talk)
-          GROUP BY talk_id
-        )
-        SELECT talk, start_timestamp, title, room, absent
+        SELECT talk, login as speakerlogin, start_timestamp, title, room
         FROM talks
-          JOIN cte ON cte.talk_id = talks.id
-        ORDER BY absent DESC
+          JOIN persons ON persons.id = talks.speaker_id
+        WHERE status = $1
+        ORDER BY modified_at DESC
         {}"#,
                         limit);
-    let talks: Vec<_> = conn.query(&query[..], &[])
+    let talks: Vec<_> = conn.query(&query[..], &[&TalkStatus::Accepted])
         .chain_err(|| "Unable to load recently added talks")?
         .iter()
         .map(|row| {
