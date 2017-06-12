@@ -272,7 +272,22 @@ impl Context {
                    start_timestamp,
                    end_timestamp,
                    limit
-               } => { Response::NotImplemented },
+               } => {
+                   let conn = self.conn.as_ref().ok_or("establish connection first")?;
+                   let start_timestamp = match start_timestamp {
+                       Timestamp::Date(d) => d.and_hms(0, 0, 0),
+                       Timestamp::DateTime(dt) => dt
+                   };
+                   let end_timestamp = match end_timestamp {
+                       Timestamp::Date(d) => d.and_hms(23, 59, 59),
+                       Timestamp::DateTime(dt) => dt
+                   };
+                   let limit: u32 = limit.validate()?;
+                   let talks = friends_talks(&conn, login, password, start_timestamp, end_timestamp,
+                   limit)
+                        .chain_err(|| "during Request::FriendsTalks")?;
+                   Response::Ok(ResponseInfo::FriendsTalks(talks))
+               },
 
                Request::FriendsEvents {
                    login,

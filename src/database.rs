@@ -741,6 +741,62 @@ pub fn proposals(conn: &Connection, login: String, password: String) -> Result<V
 /// przez znajomych danego uczestnika posortowana wg czasu rozpoczęcia,
 /// wypisuje pierwsze <limit> referatów, przy czym 0 oznacza, że należy wypisać wszystkie
 ///  <talk> <speakerlogin> <start_timestamp> <title> <room>
+pub fn friends_talks(conn: &Connection,
+                     login: String,
+                     password: String,
+                     start_timestamp: DateTime,
+                     end_timestamp: DateTime,
+                     limit: u32)
+                     -> Result<Vec<FriendsTalk>> {
+
+    let person_id = authorize_person_as(conn, &login, Some(&password), PersonType::User)?;
+
+    let limit = if limit == 0 {
+        "".to_owned()
+    } else {
+        format!("LIMIT {}", limit)
+    };
+
+    let query = format!(r#"
+        WITH friends(id) AS (
+            SELECT person2_id
+            FROM person_knows_person
+            JOIN (
+                SELECT person2_id AS person1_id, person1_id AS person2_id
+                FROM person_knows_person
+            ) AS reversed USING(person1_id, person2_id)
+            WHERE person1_id = $1
+        )
+        SELECT talk, login AS speakerlogin, start_timestamp, title, room
+        FROM talks
+          JOIN persons ON persons.id = talks.speaker_id
+          JOIN friends ON friends.id = talks.speaker_id
+        WHERE status = $2
+          AND start_timestamp >= $3
+          AND start_timestamp <= $4
+        ORDER BY start_timestamp
+        {}"#,
+                        limit);
+    let talks: Vec<_> = conn.query(&query[..],
+                                   &[&person_id,
+                                     &TalkStatus::Accepted,
+                                     &start_timestamp,
+                                     &end_timestamp])
+        .chain_err(|| "Unable to load friends talks")?
+        .iter()
+        .map(|row| {
+            FriendsTalk {
+                talk: row.get("talk"),
+                speakerlogin: row.get("speakerlogin"),
+                start_timestamp: row.get("start_timestamp"),
+                title: row.get("title"),
+                room: row.get("room"),
+            }
+        })
+        .collect();
+
+    Ok(talks)
+}
 
 /// (U) friends_events <login> <password> <eventname>
 /// lista znajomych uczestniczących w danym wydarzeniu
