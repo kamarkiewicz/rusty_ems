@@ -242,8 +242,7 @@ pub fn evaluation(conn: &Connection,
 
     let status = TalkStatus::Accepted;
     let query = r#"
-        SELECT id
-        FROM talks
+        SELECT id FROM talks
         WHERE talk = $1
           AND status = $2
         LIMIT 1"#;
