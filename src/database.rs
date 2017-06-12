@@ -622,6 +622,49 @@ pub fn abandoned_talks(conn: &Connection,
 /// zwraca listę ostatnio zarejestrowanych referatów, wypisuje ostatnie <limit> referatów
 /// wg daty zarejestrowania, przy czym 0 oznacza, że należy wypisać wszystkie
 ///  <talk> <speakerlogin> <start_timestamp> <title> <room>
+pub fn recently_added_talks(conn: &Connection, limit: u32) -> Result<Vec<RecentlyAddedTalk>> {
+
+    let limit = if limit == 0 {
+        "".to_owned()
+    } else {
+        format!("LIMIT {}", limit)
+    };
+
+    // TODO: FIX THIS QUERY
+    let query = format!(r#"
+        WITH person_registered_for_talk(person_id, talk_id) AS (
+          SELECT person_id, talks.id
+          FROM person_registered_for_event
+            JOIN talks USING(event_id)
+        ),
+        cte(talk_id, absent) AS (
+          SELECT talk_id, count(person_id)
+          FROM person_registered_for_talk
+          WHERE (person_id, talk_id) NOT IN (SELECT * FROM person_attended_for_talk)
+          GROUP BY talk_id
+        )
+        SELECT talk, start_timestamp, title, room, absent
+        FROM talks
+          JOIN cte ON cte.talk_id = talks.id
+        ORDER BY absent DESC
+        {}"#,
+                        limit);
+    let talks: Vec<_> = conn.query(&query[..], &[])
+        .chain_err(|| "Unable to load recently added talks")?
+        .iter()
+        .map(|row| {
+            RecentlyAddedTalk {
+                talk: row.get("talk"),
+                speakerlogin: row.get("speakerlogin"),
+                start_timestamp: row.get("start_timestamp"),
+                title: row.get("title"),
+                room: row.get("room"),
+            }
+        })
+        .collect();
+
+    Ok(talks)
+}
 
 /// (U/O) rejected_talks <login> <password>
 /// jeśli wywołujący ma uprawnienia organizatora zwraca listę wszystkich odrzuconych referatów
