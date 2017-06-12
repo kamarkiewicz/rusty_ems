@@ -342,7 +342,7 @@ pub fn make_friends(conn: &Connection,
         INSERT INTO person_knows_person (person1_id, person2_id)
         VALUES ($1, $2)"#;
     conn.execute(query, &[&person1_id, &person2_id])
-        .chain_err(|| "These Users cannot be friends")?;
+        .chain_err(|| "These users are already friends?")?;
 
     Ok(())
 }
