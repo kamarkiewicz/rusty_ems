@@ -110,6 +110,8 @@ pub enum TalkStatus {
 ///     tak samo jak ocena uczestnika obecnego na referacie,
 /// <eventname> jest nazwą wydarzenia, którego częścią jest dany referat - może być pustym
 ///     napisem, co oznacza, że referat nie jest przydzielony do jakiegokolwiek wydarzenia
+///
+/// Referat, który jest przypisywany do wydarzenia, musi zaczynać się w czasie trwania wydarzenia.
 pub fn register_or_accept_talk(conn: &Connection,
                                login: String,
                                password: String,
@@ -125,8 +127,13 @@ pub fn register_or_accept_talk(conn: &Connection,
     let person_id = authorize_person_as(conn, &login, Some(&password), PersonType::Organizer)?;
     let speaker_id = authorize_person_as(conn, &speakerlogin, None, PersonType::Whatever)?;
     let event_id: Option<i32> = if !eventname.is_empty() {
-        let query = r#"SELECT id FROM events WHERE eventname=$1 LIMIT 1"#;
-        conn.query(query, &[&eventname])
+        let query = r#"
+            SELECT id FROM events
+            WHERE eventname = $1
+              AND start_timestamp <= $2
+              AND end_timestamp >= $2
+            LIMIT 1"#;
+        conn.query(query, &[&eventname, &start_timestamp])
             .chain_err(|| "Unable to load event")?
             .iter()
             .map(|row| row.get("id"))
@@ -184,8 +191,7 @@ pub fn register_user_for_event(conn: &Connection,
     let person_id = authorize_person_as(conn, &login, Some(&password), PersonType::User)?;
 
     let query = r#"
-        SELECT id
-        FROM events
+        SELECT id FROM events
         WHERE eventname = $1
         LIMIT 1"#;
     let event_id: i32 =
@@ -207,13 +213,18 @@ pub fn register_user_for_event(conn: &Connection,
 
 /// (*U) attendance <login> <password> <talk>
 /// odnotowanie faktycznej obecności uczestnika <login> na referacie <talk>
+///
+/// Uczestnik mógł być tylko na zatwierdzonym referacie.
 pub fn attendance(conn: &Connection, login: String, password: String, talk: String) -> Result<()> {
 
     let person_id = authorize_person_as(conn, &login, Some(&password), PersonType::User)?;
 
     let query = r#"
-        SELECT id FROM talks WHERE talk=$1 LIMIT 1"#;
-    let talk_id: i32 = conn.query(query, &[&talk])
+        SELECT id FROM talks
+        WHERE talk = $1
+          AND status = $2
+        LIMIT 1"#;
+    let talk_id: i32 = conn.query(query, &[&talk, &TalkStatus::Accepted])
         .chain_err(|| "Unable to load the talk")?
         .iter()
         .map(|row| row.get("id"))

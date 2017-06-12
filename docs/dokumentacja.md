@@ -17,7 +17,7 @@ Całość napisana i przetestowana przy użyciu języka **Rust 1.18** z gałęzi
 
 ![Diagram E-R](erd.svg)
 
-## Instalacja środowiska
+## Dostosowanie środowiska
 
 Rust posiada oficjalny instalator środowiska dostępny na stronie [rustup.rs](https://rustup.rs/).
 Sprowadza się do wykonania w terminalu poniższej komendy i podążaniu za instrukcjami na ekranie:
@@ -27,8 +27,7 @@ curl https://sh.rustup.rs -sSf | sh
 
 ## Kompilacja projektu
 
-Wymagane są pliki nagłówkowe klienta PostgreSQL.
-Wykonianie poniższej komendy wykona kompilację programu w wersji finalnej:
+Wykonanie poniższej komendy przeprowadzi kompilację programu w wersji finalnej:
 ```
 cargo build --release
 ```
@@ -75,4 +74,5 @@ Po każdym zapytaniu program zwraca rezultat w formacie JSON.
 ## Testowanie
 
 Dołożyłem wszelkich starań, by program został dobrze przetestowany.
-W tym celu napisałem prostą testerkę dostępną pod adresem <https://github.com/kamarkiewicz/tster>
+W tym celu napisałem prostą testerkę dostępną pod adresem <https://github.com/kamarkiewicz/tster>.
+Środowiskiem testowym był Ubuntu 16.04.2 LTS (live cd).
