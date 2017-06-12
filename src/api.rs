@@ -373,12 +373,14 @@ pub struct FriendsEvent {
 #[derive(Debug, Serialize, PartialEq)]
 pub struct RecommendedTalk {
     pub talk: String,
+    pub speakerlogin: String,
     #[serde(with = "datetime_fmt")]
     pub start_timestamp: DateTime,
     pub title: String,
     pub room: String,
-    pub number: u32,
+    pub score: u32,
 }
+
 
 
 static SECRET: &str = "d8578edf8458ce06fbc5bb76a58c5ca4";
