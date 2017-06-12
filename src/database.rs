@@ -554,7 +554,7 @@ pub fn attended_talks(conn: &Connection,
     Ok(talks)
 }
 
-/// (*O) abandoned_talks <login> <password>  <limit>
+/// (*O) abandoned_talks <login> <password> <limit>
 /// zwraca listę referatów posortowaną malejąco wg liczby uczestników
 /// <number> zarejestrowanych na wydarzenie obejmujące referat,
 /// którzy nie byli na tym referacie obecni, wypisuje pierwsze <limit> referatów,
