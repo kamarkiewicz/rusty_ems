@@ -544,7 +544,8 @@ pub fn attended_talks(conn: &Connection,
 
     let query = r#"
         SELECT talk, start_timestamp, title, room
-        FROM person_attended_for_talk paft JOIN talks ON paft.talk_id=talks.id
+        FROM person_attended_for_talk paft
+          JOIN talks ON paft.talk_id = talks.id
         WHERE paft.person_id = $1"#;
     let talks: Vec<_> = conn.query(query, &[&person_id])
         .chain_err(|| "Unable to load person's talks")?
