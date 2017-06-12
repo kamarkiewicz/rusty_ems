@@ -43,7 +43,8 @@ Po każdym zapytaniu program zwraca rezultat w formacie JSON.
 
  - `(*) open <baza> <login> <password>`
    
-    Jeśli nie uda się wgrać schemy do podanej bazy (np. z powodu braku uprawnień) to program zakończy się twardym błędem i komunikatem `Unable to setup a database`.
+    Zwraca ERROR również jeśli nie uda się wgrać schemy do podanej bazy
+    (np. z powodu braku uprawnień).
  
  - `(*) organizer <secret> <newlogin> <newpassword>`
  - `(*O) event <login> <password> <eventname> <start_timestamp> <end_timestamp>`
@@ -64,11 +65,11 @@ Po każdym zapytaniu program zwraca rezultat w formacie JSON.
  - `(N) recently_added_talks <limit>`
  - `(U/O) rejected_talks <login> <password>`
  - `(O) proposals <login> <password>`
+ - `(U) friends_talks <login> <password> <start_timestamp> <end_timestamp> <limit>`
+ - `(U) friends_events <login> <password> <eventname>`
 
  ### Niezaimplementowane zapytania
  
- - `(U) friends_talks <login> <password> <start_timestamp> <end_timestamp> <limit>`
- - `(U) friends_events <login> <password> <eventname>`
  - `(U) recommended_talks <login> <password> <start_timestamp> <end_timestamp> <limit>`
 
 ## Testowanie

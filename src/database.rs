@@ -23,11 +23,9 @@ pub fn establish_connection(login: String, password: String, baza: String) -> Re
 pub fn setup_database(conn: &Connection) -> Result<()> {
     let up_sql = include_str!("../migrations/20170529191530_base/up.sql");
     let check_sql = include_str!("../migrations/20170529191530_base/check.sql");
-    if conn.batch_execute(check_sql).is_err() {
-        conn.batch_execute(up_sql)
-            .expect("Unable to setup a database");
-    }
-    Ok(())
+    conn.batch_execute(check_sql)
+        .or_else(|_| conn.batch_execute(up_sql))
+        .chain_err(|| "Unable to setup a database")
 }
 
 /// (*) organizer <secret> <newlogin> <newpassword>
