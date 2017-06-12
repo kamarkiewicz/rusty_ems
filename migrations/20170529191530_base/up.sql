@@ -47,6 +47,6 @@ CREATE TABLE person_attended_for_talk (
 CREATE TABLE person_rated_talk (
 	person_id integer REFERENCES persons (id),
 	talk_id integer REFERENCES talks (id),
-	rating smallint,
+	rating smallint NOT NULL CHECK (rating >= 0 AND rating <= 10),
 	PRIMARY KEY (person_id, talk_id)
 );
