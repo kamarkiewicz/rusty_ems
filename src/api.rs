@@ -401,6 +401,11 @@ pub fn read_call(data: &str) -> Result<Request> {
     Ok(info)
 }
 
+
+// ================================================
+//                    TESTS
+// ================================================
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -440,14 +445,16 @@ mod tests {
             "limit": "42"}}"#;
         let info: Request = read_call(&data).expect("json input needs a fix");
 
-        let common_timestamp = Timestamp::parse_from_str("2015-09-05 23:56:04",
-                                                         "%Y-%m-%d %H:%M:%S")
-                .expect("not a timestamp");
+        let timestamp = DateTime::parse_from_str("2015-09-05 23:56:04", "%Y-%m-%d %H:%M:%S")
+            .expect("not a timestamp");
+        let start_timestamp = Timestamp::DateTime(timestamp);
+        let end_timestamp = Timestamp::DateTime(timestamp);
+
         assert!(info ==
                 Request::MostPopularTalks {
-                    start_timestamp: common_timestamp,
-                    end_timestamp: common_timestamp,
-                    limit: "42".to_owned(),
+                    start_timestamp: start_timestamp,
+                    end_timestamp: end_timestamp,
+                    limit: StrOr::Str("42".to_owned()),
                 });
     }
 
@@ -471,10 +478,13 @@ mod tests {
                        "end_timestamp": "2016-02-01 18:00:00"}}"#;
         let info: Request = read_call(&data).expect("json input needs a fix");
 
-        let start_timestamp = Timestamp::parse_from_str("2016-01-20 10:00:00", "%Y-%m-%d %H:%M:%S")
-            .unwrap();
-        let end_timestamp = Timestamp::parse_from_str("2016-02-01 18:00:00", "%Y-%m-%d %H:%M:%S")
-            .unwrap();
+        let timestamp = DateTime::parse_from_str("2016-01-20 10:00:00", "%Y-%m-%d %H:%M:%S")
+            .expect("not a timestamp");
+        let start_timestamp = Timestamp::DateTime(timestamp);
+        let timestamp = DateTime::parse_from_str("2016-02-01 18:00:00", "%Y-%m-%d %H:%M:%S")
+            .expect("not a timestamp");
+        let end_timestamp = Timestamp::DateTime(timestamp);
+
         assert!(info ==
                 Request::Event {
                     login: "Donald_Grump11".to_owned(),
