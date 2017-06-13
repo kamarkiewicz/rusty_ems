@@ -360,8 +360,8 @@ pub fn user_plan(conn: &Connection, login: String, limit: u32) -> Result<Vec<Use
     };
 
     let query = format!(r#"
-        WITH cte(person_id, speakerlogin, talk, start_timestamp, title, room) AS (
-          SELECT person_id, login, talk, start_timestamp, title, room
+        WITH cte(talk_id, person_id, speakerlogin, talk, start_timestamp, title, room) AS (
+          SELECT talks.id, person_id, login, talk, start_timestamp, title, room
           FROM person_registered_for_event prfe
             JOIN talks USING(event_id)
             JOIN persons speakers ON speaker_id=speakers.id
@@ -369,10 +369,10 @@ pub fn user_plan(conn: &Connection, login: String, limit: u32) -> Result<Vec<Use
             AND start_timestamp >= now()
         )
         SELECT speakerlogin, talk, start_timestamp, title, room
-        FROM cte
-          JOIN persons ON cte.person_id = persons.id
+        FROM persons
+          JOIN cte ON cte.person_id = persons.id
         WHERE persons.login = $2
-        ORDER BY start_timestamp
+        ORDER BY start_timestamp, talk_id
         {}"#,
                         limit);
     let plans: Vec<_> = conn.query(&query[..], &[&TalkStatus::Accepted, &login])
@@ -403,7 +403,7 @@ pub fn day_plan(conn: &Connection, date: Date) -> Result<Vec<DayPlan>> {
         FROM talks
         WHERE status = $1
           AND start_timestamp::date = $2
-        ORDER BY room, start_timestamp"#;
+        ORDER BY room, start_timestamp, talks.id"#;
     let plans: Vec<_> = conn.query(&query[..], &[&TalkStatus::Accepted, &date])
         .chain_err(|| "Unable to load day plan")?
         .iter()
@@ -462,7 +462,7 @@ pub fn best_talks(conn: &Connection,
         WHERE status = $1
           AND start_timestamp >= $2
           AND start_timestamp <= $3
-        ORDER BY average_rate DESC
+        ORDER BY average_rate DESC, talks.id
         {}"#,
                         all,
                         limit);
@@ -511,7 +511,7 @@ pub fn most_popular_talks(conn: &Connection,
         WHERE status = $1
           AND start_timestamp >= $2
           AND start_timestamp <= $3
-        ORDER BY arrivals DESC
+        ORDER BY arrivals DESC, talks.id
         {}"#,
                         limit);
     let talks: Vec<_> = conn.query(&query[..],
@@ -597,7 +597,7 @@ pub fn abandoned_talks(conn: &Connection,
         SELECT talk, start_timestamp, title, room, absent
         FROM talks
           JOIN cte ON cte.talk_id = talks.id
-        ORDER BY absent DESC
+        ORDER BY absent DESC, talks.id
         {}"#,
                         limit);
     let talks: Vec<_> = conn.query(&query[..], &[])
@@ -634,7 +634,7 @@ pub fn recently_added_talks(conn: &Connection, limit: u32) -> Result<Vec<Recentl
         FROM talks
           JOIN persons ON persons.id = talks.speaker_id
         WHERE status = $1
-        ORDER BY modified_at DESC
+        ORDER BY modified_at DESC, talks.id
         {}"#,
                         limit);
     let talks: Vec<_> = conn.query(&query[..], &[&TalkStatus::Accepted])
@@ -772,7 +772,7 @@ pub fn friends_talks(conn: &Connection,
         WHERE status = $2
           AND start_timestamp >= $3
           AND start_timestamp <= $4
-        ORDER BY start_timestamp
+        ORDER BY start_timestamp, talks.id
         {}"#,
                         limit);
     let talks: Vec<_> = conn.query(&query[..],
