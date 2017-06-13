@@ -39,6 +39,11 @@ Program przestrzega specyfikacji podanej przez wykładowcę na stronie SKOS.
 Każde zapytanie musi być podane w pełnej jednej linii wejścia w formacie JSON.
 Po każdym zapytaniu program zwraca rezultat w formacie JSON.
 
+Przy zapytaniach, gdzie mogły pojawić się niejednoznaczności w zwracanej kolejności,
+przyjąłem dodatkowe sortowanie po kolejności wstawienia interesującego względem
+zapytania obiektu, np. `user_plan` jest sortowany w pierwszej kolejności po czasie
+rozpoczęcia referatu, zaś w drugiej po kolejności wstawiania referatów do bazy.
+
 ### Zaimplementowane zapytania
 
  - `(*) open <baza> <login> <password>`
