@@ -155,6 +155,16 @@ impl Route for FriendsInfo {
     }
 }
 
+impl Route for UserPlanInfo {
+    fn route(self, ctx: &mut Context) -> Result<Response> {
+        let conn = ctx.conn.as_ref().ok_or("establish connection first")?;
+        let limit = self.limit.validate()?;
+        let user_plans = user_plan(conn, self.login, limit)
+            .chain_err(|| "during Request::UserPlan")?;
+        Ok(Response::Ok(ResponseInfo::UserPlans(user_plans)))
+    }
+}
+
 impl Route for FriendsEventsInfo {
     fn route(self, ctx: &mut Context) -> Result<Response> {
         let conn = ctx.conn.as_ref().ok_or("establish connection first")?;
@@ -184,14 +194,7 @@ impl Context {
                Request::Reject(info) => info.route(self)?,
                Request::Proposal(info) => info.route(self)?,
                Request::Friends(info) => info.route(self)?,
-
-               Request::UserPlan { login, limit } => {
-                   let conn = self.conn.as_ref().ok_or("establish connection first")?;
-                   let limit = limit.validate()?;
-                   let user_plans = user_plan(&conn, login, limit)
-                       .chain_err(|| "during Request::UserPlan")?;
-                   Response::Ok(ResponseInfo::UserPlans(user_plans))
-               }
+               Request::UserPlan(info) => info.route(self)?,
 
                Request::DayPlan { timestamp } => {
                    let conn = self.conn.as_ref().ok_or("establish connection first")?;

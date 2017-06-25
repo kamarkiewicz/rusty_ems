@@ -104,8 +104,7 @@ pub enum Request {
     Reject(RejectInfo),
     Proposal(ProposalInfo),
     Friends(FriendsInfo),
-
-    UserPlan { login: String, limit: StrOr<u32> },
+    UserPlan(UserPlanInfo),
 
     DayPlan {
         #[serde(with = "date_fmt")]
@@ -257,6 +256,12 @@ pub struct FriendsInfo {
     pub login1: String,
     pub password: String,
     pub login2: String,
+}
+
+#[derive(Debug, Deserialize, PartialEq)]
+pub struct UserPlanInfo {
+    pub login: String,
+    pub limit: StrOr<u32>,
 }
 
 #[derive(Debug, Deserialize, PartialEq)]
