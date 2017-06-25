@@ -258,15 +258,6 @@ impl Route for ProposalsInfo {
     }
 }
 
-impl Route for FriendsEventsInfo {
-    fn route(self, ctx: &mut Context) -> Result<Response> {
-        let conn = ctx.conn.as_ref().ok_or("establish connection first")?;
-        let talks = friends_events(conn, self.login, self.password, self.eventname)
-            .chain_err(|| "during Request::FriendsEvents")?;
-        Ok(Response::Ok(ResponseInfo::FriendsEvents(talks)))
-    }
-}
-
 impl Route for FriendsTalksInfo {
     fn route(self, ctx: &mut Context) -> Result<Response> {
         let conn = ctx.conn.as_ref().ok_or("establish connection first")?;
@@ -289,6 +280,17 @@ impl Route for FriendsTalksInfo {
         Ok(Response::Ok(ResponseInfo::FriendsTalks(talks)))
     }
 }
+
+impl Route for FriendsEventsInfo {
+    fn route(self, ctx: &mut Context) -> Result<Response> {
+        let conn = ctx.conn.as_ref().ok_or("establish connection first")?;
+        let talks = friends_events(conn, self.login, self.password, self.eventname)
+            .chain_err(|| "during Request::FriendsEvents")?;
+        Ok(Response::Ok(ResponseInfo::FriendsEvents(talks)))
+    }
+}
+
+impl Route for RecommendedTalksInfo {}
 
 #[allow(unused_variables)]
 #[allow(unused_imports)]
@@ -321,15 +323,7 @@ impl Context {
                Request::Proposals(info) => info.route(self)?,
                Request::FriendsTalks(info) => info.route(self)?,
                Request::FriendsEvents(info) => info.route(self)?,
-
-               Request::RecommendedTalks {
-                   login,
-                   password,
-                   start_timestamp,
-                   end_timestamp,
-                   limit,
-               } => Response::NotImplemented,
-
+               Request::RecommendedTalks(info) => info.route(self)?,
            })
     }
 }
