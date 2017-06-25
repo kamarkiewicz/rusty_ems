@@ -93,11 +93,7 @@ impl<T> StrOr<T>
 #[derive(Debug, Deserialize, PartialEq)]
 #[serde(rename_all = "snake_case")]
 pub enum Request {
-    Open {
-        baza: String,
-        login: String,
-        password: String,
-    },
+    Open(OpenInfo),
 
     Organizer {
         secret: String,
@@ -234,6 +230,13 @@ pub enum Request {
         end_timestamp: Timestamp,
         limit: StrOr<u32>,
     },
+}
+
+#[derive(Debug, Deserialize, PartialEq)]
+pub struct OpenInfo {
+    pub baza: String,
+    pub login: String,
+    pub password: String,
 }
 
 #[derive(Debug, Deserialize, PartialEq)]

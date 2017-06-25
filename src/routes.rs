@@ -17,6 +17,14 @@ pub trait Route
     }
 }
 
+impl Route for OpenInfo {
+    fn route(self, ctx: &mut Context) -> Result<Response> {
+        ctx.conn = Some(establish_connection(self.login, self.password, self.baza)?);
+        setup_database(ctx.conn.as_ref().unwrap())?;
+        Ok(Response::Ok(ResponseInfo::Empty))
+    }
+}
+
 impl Route for FriendsEventsInfo {
     fn route(self, ctx: &mut Context) -> Result<Response> {
         let conn = ctx.conn.as_ref().ok_or("establish connection first")?;
@@ -35,15 +43,7 @@ impl Context {
 
     pub fn resolve(&mut self, req: Request) -> Result<Response> {
         Ok(match req {
-               Request::Open {
-                   login,
-                   password,
-                   baza,
-               } => {
-                   self.conn = Some(establish_connection(login, password, baza)?);
-                   setup_database(self.conn.as_ref().unwrap())?;
-                   Response::Ok(ResponseInfo::Empty)
-               },
+               Request::Open(info) => info.route(self)?,
 
                Request::Organizer {
                    newlogin,
