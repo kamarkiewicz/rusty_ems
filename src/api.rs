@@ -103,12 +103,7 @@ pub enum Request {
     Evaluation(EvaluationInfo),
     Reject(RejectInfo),
     Proposal(ProposalInfo),
-
-    Friends {
-        login1: String,
-        password: String,
-        login2: String,
-    },
+    Friends(FriendsInfo),
 
     UserPlan { login: String, limit: StrOr<u32> },
 
@@ -255,6 +250,13 @@ pub struct ProposalInfo {
     pub title: String,
     #[serde(with = "datetime_fmt")]
     pub start_timestamp: DateTime,
+}
+
+#[derive(Debug, Deserialize, PartialEq)]
+pub struct FriendsInfo {
+    pub login1: String,
+    pub password: String,
+    pub login2: String,
 }
 
 #[derive(Debug, Deserialize, PartialEq)]

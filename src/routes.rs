@@ -146,6 +146,15 @@ impl Route for ProposalInfo {
     }
 }
 
+impl Route for FriendsInfo {
+    fn route(self, ctx: &mut Context) -> Result<Response> {
+        let conn = ctx.conn.as_ref().ok_or("establish connection first")?;
+        make_friends(conn, self.login1, self.password, self.login2)
+            .chain_err(|| "during Request::Friends")?;
+        Ok(Response::Ok(ResponseInfo::Empty))
+    }
+}
+
 impl Route for FriendsEventsInfo {
     fn route(self, ctx: &mut Context) -> Result<Response> {
         let conn = ctx.conn.as_ref().ok_or("establish connection first")?;
@@ -174,17 +183,7 @@ impl Context {
                Request::Evaluation(info) => info.route(self)?,
                Request::Reject(info) => info.route(self)?,
                Request::Proposal(info) => info.route(self)?,
-
-               Request::Friends {
-                   login1,
-                   password,
-                   login2,
-               } => {
-                   let conn = self.conn.as_ref().ok_or("establish connection first")?;
-                   make_friends(&conn, login1, password, login2)
-                       .chain_err(|| "during Request::Friends")?;
-                   Response::Ok(ResponseInfo::Empty)
-               }
+               Request::Friends(info) => info.route(self)?,
 
                Request::UserPlan { login, limit } => {
                    let conn = self.conn.as_ref().ok_or("establish connection first")?;
