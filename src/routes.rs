@@ -267,6 +267,29 @@ impl Route for FriendsEventsInfo {
     }
 }
 
+impl Route for FriendsTalksInfo {
+    fn route(self, ctx: &mut Context) -> Result<Response> {
+        let conn = ctx.conn.as_ref().ok_or("establish connection first")?;
+        let start_timestamp = match self.start_timestamp {
+            Timestamp::Date(d) => d.and_hms(0, 0, 0),
+            Timestamp::DateTime(dt) => dt,
+        };
+        let end_timestamp = match self.end_timestamp {
+            Timestamp::Date(d) => d.and_hms(23, 59, 59),
+            Timestamp::DateTime(dt) => dt,
+        };
+        let limit: u32 = self.limit.validate()?;
+        let talks = friends_talks(conn,
+                                  self.login,
+                                  self.password,
+                                  start_timestamp,
+                                  end_timestamp,
+                                  limit)
+                .chain_err(|| "during Request::FriendsTalks")?;
+        Ok(Response::Ok(ResponseInfo::FriendsTalks(talks)))
+    }
+}
+
 #[allow(unused_variables)]
 #[allow(unused_imports)]
 impl Context {
@@ -296,34 +319,7 @@ impl Context {
                Request::RecentlyAddedTalks(info) => info.route(self)?,
                Request::RejectedTalks(info) => info.route(self)?,
                Request::Proposals(info) => info.route(self)?,
-
-               Request::FriendsTalks {
-                   login,
-                   password,
-                   start_timestamp,
-                   end_timestamp,
-                   limit,
-               } => {
-                   let conn = self.conn.as_ref().ok_or("establish connection first")?;
-                   let start_timestamp = match start_timestamp {
-                       Timestamp::Date(d) => d.and_hms(0, 0, 0),
-                       Timestamp::DateTime(dt) => dt,
-                   };
-                   let end_timestamp = match end_timestamp {
-                       Timestamp::Date(d) => d.and_hms(23, 59, 59),
-                       Timestamp::DateTime(dt) => dt,
-                   };
-                   let limit: u32 = limit.validate()?;
-                   let talks = friends_talks(&conn,
-                                             login,
-                                             password,
-                                             start_timestamp,
-                                             end_timestamp,
-                                             limit)
-                           .chain_err(|| "during Request::FriendsTalks")?;
-                   Response::Ok(ResponseInfo::FriendsTalks(talks))
-               }
-
+               Request::FriendsTalks(info) => info.route(self)?,
                Request::FriendsEvents(info) => info.route(self)?,
 
                Request::RecommendedTalks {

@@ -113,17 +113,7 @@ pub enum Request {
     RecentlyAddedTalks(RecentlyAddedTalksInfo),
     RejectedTalks(RejectedTalksInfo),
     Proposals(ProposalsInfo),
-
-    FriendsTalks {
-        login: String,
-        password: String,
-        #[serde(with = "timestamp_fmt")]
-        start_timestamp: Timestamp,
-        #[serde(with = "timestamp_fmt")]
-        end_timestamp: Timestamp,
-        limit: StrOr<u32>,
-    },
-
+    FriendsTalks(FriendsTalksInfo),
     FriendsEvents(FriendsEventsInfo),
 
     RecommendedTalks {
@@ -290,6 +280,18 @@ pub struct ProposalsInfo {
     pub login: String,
     pub password: String,
 }
+
+#[derive(Debug, Deserialize, PartialEq)]
+pub struct FriendsTalksInfo {
+    pub login: String,
+    pub password: String,
+    #[serde(with = "timestamp_fmt")]
+    pub start_timestamp: Timestamp,
+    #[serde(with = "timestamp_fmt")]
+    pub end_timestamp: Timestamp,
+    pub limit: StrOr<u32>,
+}
+
 
 #[derive(Debug, Deserialize, PartialEq)]
 pub struct FriendsEventsInfo {
