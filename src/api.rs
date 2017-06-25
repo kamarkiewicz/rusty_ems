@@ -473,11 +473,11 @@ mod tests {
             r#"{ "open": { "baza": "stud", "login": "stud", "password": "d8578edf8458ce06fbc"}}"#;
         let info: Request = read_call(&data).unwrap();
         assert!(info ==
-                Request::Open {
-                    baza: "stud".to_owned(),
-                    login: "stud".to_owned(),
-                    password: "d8578edf8458ce06fbc".to_owned(),
-                });
+                Request::Open(OpenInfo {
+                                  baza: "stud".to_owned(),
+                                  login: "stud".to_owned(),
+                                  password: "d8578edf8458ce06fbc".to_owned(),
+                              }));
     }
 
     #[test]
@@ -487,11 +487,11 @@ mod tests {
         data += r#"", "newlogin": "organizer", "newpassword": "d8578edf8458ce06fbc"}}"#;
         let info: Request = read_call(&data).unwrap();
         assert!(info ==
-                Request::Organizer {
-                    secret: SECRET.to_owned(),
-                    newlogin: "organizer".to_owned(),
-                    newpassword: "d8578edf8458ce06fbc".to_owned(),
-                });
+                Request::Organizer(OrganizerInfo {
+                                       secret: SECRET.to_owned(),
+                                       newlogin: "organizer".to_owned(),
+                                       newpassword: "d8578edf8458ce06fbc".to_owned(),
+                                   }));
     }
 
     #[test]
@@ -508,11 +508,11 @@ mod tests {
         let end_timestamp = Timestamp::DateTime(timestamp);
 
         assert!(info ==
-                Request::MostPopularTalks {
-                    start_timestamp: start_timestamp,
-                    end_timestamp: end_timestamp,
-                    limit: StrOr::Str("42".to_owned()),
-                });
+                Request::MostPopularTalks(MostPopularTalksInfo {
+                                              start_timestamp: start_timestamp,
+                                              end_timestamp: end_timestamp,
+                                              limit: StrOr::Str("42".to_owned()),
+                                          }));
     }
 
     #[test]
@@ -543,12 +543,12 @@ mod tests {
         let end_timestamp = Timestamp::DateTime(timestamp);
 
         assert!(info ==
-                Request::Event {
-                    login: "Donald_Grump11".to_owned(),
-                    password: "admin".to_owned(),
-                    eventname: "Konwent".to_owned(),
-                    start_timestamp: start_timestamp,
-                    end_timestamp: end_timestamp,
-                });
+                Request::Event(EventInfo {
+                                   login: "Donald_Grump11".to_owned(),
+                                   password: "admin".to_owned(),
+                                   eventname: "Konwent".to_owned(),
+                                   start_timestamp: start_timestamp,
+                                   end_timestamp: end_timestamp,
+                               }));
     }
 }
