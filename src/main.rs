@@ -68,9 +68,9 @@ fn run() -> Result<()> {
     Ok(())
 }
 
-fn main_step(ctxt: &mut Context, line: &str) -> Result<Response> {
+fn main_step(ctx: &mut Context, line: &str) -> Result<Response> {
     let request: Request = read_call(line)?;
-    let response: Response = ctxt.resolve(request)?;
+    let response: Response = request.resolve(ctx)?;
     Ok(response)
 }
 

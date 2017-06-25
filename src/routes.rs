@@ -6,6 +6,12 @@ pub struct Context {
     conn: Option<Connection>,
 }
 
+impl Context {
+    pub fn new() -> Context {
+        Context { conn: None }
+    }
+}
+
 use std::fmt::Debug;
 pub trait Route
     where Self: Debug + Sized
@@ -290,37 +296,33 @@ impl Route for FriendsEventsInfo {
 
 impl Route for RecommendedTalksInfo {}
 
-impl Context {
-    pub fn new() -> Context {
-        Context { conn: None }
-    }
-
-    pub fn resolve(&mut self, req: Request) -> Result<Response> {
+impl Request {
+    pub fn resolve(self, ctx: &mut Context) -> Result<Response> {
         use Request::*;
-        match req {
-            Open(info) => info.route(self),
-            Organizer(info) => info.route(self),
-            Event(info) => info.route(self),
-            User(info) => info.route(self),
-            Talk(info) => info.route(self),
-            RegisterUserForEvent(info) => info.route(self),
-            Attendance(info) => info.route(self),
-            Evaluation(info) => info.route(self),
-            Reject(info) => info.route(self),
-            Proposal(info) => info.route(self),
-            Friends(info) => info.route(self),
-            UserPlan(info) => info.route(self),
-            DayPlan(info) => info.route(self),
-            BestTalks(info) => info.route(self),
-            MostPopularTalks(info) => info.route(self),
-            AttendedTalks(info) => info.route(self),
-            AbandonedTalks(info) => info.route(self),
-            RecentlyAddedTalks(info) => info.route(self),
-            RejectedTalks(info) => info.route(self),
-            Proposals(info) => info.route(self),
-            FriendsTalks(info) => info.route(self),
-            FriendsEvents(info) => info.route(self),
-            RecommendedTalks(info) => info.route(self),
+        match self {
+            Open(info) => info.route(ctx),
+            Organizer(info) => info.route(ctx),
+            Event(info) => info.route(ctx),
+            User(info) => info.route(ctx),
+            Talk(info) => info.route(ctx),
+            RegisterUserForEvent(info) => info.route(ctx),
+            Attendance(info) => info.route(ctx),
+            Evaluation(info) => info.route(ctx),
+            Reject(info) => info.route(ctx),
+            Proposal(info) => info.route(ctx),
+            Friends(info) => info.route(ctx),
+            UserPlan(info) => info.route(ctx),
+            DayPlan(info) => info.route(ctx),
+            BestTalks(info) => info.route(ctx),
+            MostPopularTalks(info) => info.route(ctx),
+            AttendedTalks(info) => info.route(ctx),
+            AbandonedTalks(info) => info.route(ctx),
+            RecentlyAddedTalks(info) => info.route(ctx),
+            RejectedTalks(info) => info.route(ctx),
+            Proposals(info) => info.route(ctx),
+            FriendsTalks(info) => info.route(ctx),
+            FriendsEvents(info) => info.route(ctx),
+            RecommendedTalks(info) => info.route(ctx),
         }
     }
 }
