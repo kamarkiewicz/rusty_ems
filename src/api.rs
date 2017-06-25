@@ -110,8 +110,7 @@ pub enum Request {
     MostPopularTalks(MostPopularTalksInfo),
     AttendedTalks(AttendedTalksInfo),
     AbandonedTalks(AbandonedTalksInfo),
-
-    RecentlyAddedTalks { limit: StrOr<u32> },
+    RecentlyAddedTalks(RecentlyAddedTalksInfo),
 
     RejectedTalks { login: String, password: String },
 
@@ -274,6 +273,11 @@ pub struct AttendedTalksInfo {
 pub struct AbandonedTalksInfo {
     pub login: String,
     pub password: String,
+    pub limit: StrOr<u32>,
+}
+
+#[derive(Debug, Deserialize, PartialEq)]
+pub struct RecentlyAddedTalksInfo {
     pub limit: StrOr<u32>,
 }
 

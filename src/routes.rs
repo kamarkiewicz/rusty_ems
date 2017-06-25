@@ -230,6 +230,16 @@ impl Route for AbandonedTalksInfo {
     }
 }
 
+impl Route for RecentlyAddedTalksInfo {
+    fn route(self, ctx: &mut Context) -> Result<Response> {
+        let conn = ctx.conn.as_ref().ok_or("establish connection first")?;
+        let limit: u32 = self.limit.validate()?;
+        let talks = recently_added_talks(conn, limit)
+            .chain_err(|| "during Request::RecentlyAddedTalks")?;
+        Ok(Response::Ok(ResponseInfo::RecentlyAddedTalks(talks)))
+    }
+}
+
 impl Route for FriendsEventsInfo {
     fn route(self, ctx: &mut Context) -> Result<Response> {
         let conn = ctx.conn.as_ref().ok_or("establish connection first")?;
@@ -265,14 +275,7 @@ impl Context {
                Request::MostPopularTalks(info) => info.route(self)?,
                Request::AttendedTalks(info) => info.route(self)?,
                Request::AbandonedTalks(info) => info.route(self)?,
-
-               Request::RecentlyAddedTalks { limit } => {
-                   let conn = self.conn.as_ref().ok_or("establish connection first")?;
-                   let limit: u32 = limit.validate()?;
-                   let talks = recently_added_talks(&conn, limit)
-                       .chain_err(|| "during Request::RecentlyAddedTalks")?;
-                   Response::Ok(ResponseInfo::RecentlyAddedTalks(talks))
-               }
+               Request::RecentlyAddedTalks(info) => info.route(self)?,
 
                Request::RejectedTalks { login, password } => {
                    let conn = self.conn.as_ref().ok_or("establish connection first")?;
