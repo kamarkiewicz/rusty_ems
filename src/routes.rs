@@ -57,6 +57,19 @@ impl Route for EventInfo {
     }
 }
 
+impl Route for UserInfo {
+    fn route(self, ctx: &mut Context) -> Result<Response> {
+        let conn = ctx.conn.as_ref().ok_or("establish connection first")?;
+        create_user(conn,
+                    self.login,
+                    self.password,
+                    self.newlogin,
+                    self.newpassword)
+                .chain_err(|| "during Request::User")?;
+        Ok(Response::Ok(ResponseInfo::Empty))
+    }
+}
+
 impl Route for FriendsEventsInfo {
     fn route(self, ctx: &mut Context) -> Result<Response> {
         let conn = ctx.conn.as_ref().ok_or("establish connection first")?;
@@ -78,18 +91,7 @@ impl Context {
                Request::Open(info) => info.route(self)?,
                Request::Organizer(info) => info.route(self)?,
                Request::Event(info) => info.route(self)?,
-
-               Request::User {
-                   login,
-                   password,
-                   newlogin,
-                   newpassword,
-               } => {
-                   let conn = self.conn.as_ref().ok_or("establish connection first")?;
-                   create_user(&conn, login, password, newlogin, newpassword)
-                       .chain_err(|| "during Request::User")?;
-                   Response::Ok(ResponseInfo::Empty)
-               }
+               Request::User(info) => info.route(self)?,
 
                Request::Talk {
                    login,

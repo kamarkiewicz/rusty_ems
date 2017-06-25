@@ -96,13 +96,7 @@ pub enum Request {
     Open(OpenInfo),
     Organizer(OrganizerInfo),
     Event(EventInfo),
-
-    User {
-        login: String,
-        password: String,
-        newlogin: String,
-        newpassword: String,
-    },
+    User(UserInfo),
 
     Talk {
         login: String,
@@ -241,6 +235,14 @@ pub struct EventInfo {
     pub start_timestamp: Timestamp,
     #[serde(with = "timestamp_fmt")]
     pub end_timestamp: Timestamp,
+}
+
+#[derive(Debug, Deserialize, PartialEq)]
+pub struct UserInfo {
+    pub login: String,
+    pub password: String,
+    pub newlogin: String,
+    pub newpassword: String,
 }
 
 #[derive(Debug, Deserialize, PartialEq)]
