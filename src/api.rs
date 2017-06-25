@@ -306,12 +306,10 @@ pub struct RecommendedTalksInfo {
 // ================================================
 
 pub enum Response {
-    #[allow(dead_code)]
     Ok(ResponseInfo),
     NotImplemented,
 }
 
-#[allow(dead_code)]
 #[derive(Debug, Serialize, PartialEq)]
 #[serde(untagged)]
 pub enum ResponseInfo {
@@ -326,6 +324,7 @@ pub enum ResponseInfo {
     Proposals(Vec<Proposal>),
     FriendsTalks(Vec<FriendsTalk>),
     FriendsEvents(Vec<FriendsEvent>),
+    #[allow(dead_code)]
     RecommendedTalks(Vec<RecommendedTalk>),
     Empty,
 }
