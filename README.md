@@ -31,7 +31,7 @@ cargo build --release
 ```
 Program wykonywalny `rusty_ems` pojawi się w katalogu `target/release`.
 
-## Specyfilacja
+## Specyfikacja
 
 Program przestrzega specyfikacji podanej przez wykładowcę na stronie SKOS.
 Każde zapytanie musi być podane w pełnej jednej linii wejścia w formacie JSON.
