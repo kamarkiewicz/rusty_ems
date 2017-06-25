@@ -174,6 +174,25 @@ impl Route for DayPlanInfo {
     }
 }
 
+impl Route for BestTalksInfo {
+    fn route(self, ctx: &mut Context) -> Result<Response> {
+        let conn = ctx.conn.as_ref().ok_or("establish connection first")?;
+        let start_timestamp = match self.start_timestamp {
+            Timestamp::Date(d) => d.and_hms(0, 0, 0),
+            Timestamp::DateTime(dt) => dt,
+        };
+        let end_timestamp = match self.end_timestamp {
+            Timestamp::Date(d) => d.and_hms(23, 59, 59),
+            Timestamp::DateTime(dt) => dt,
+        };
+        let limit: u32 = self.limit.validate()?;
+        let all: bool = self.all.validate()? == 1;
+        let best_talks = best_talks(conn, start_timestamp, end_timestamp, limit, all)
+            .chain_err(|| "during Request::BestTalks")?;
+        Ok(Response::Ok(ResponseInfo::BestTalks(best_talks)))
+    }
+}
+
 impl Route for FriendsEventsInfo {
     fn route(self, ctx: &mut Context) -> Result<Response> {
         let conn = ctx.conn.as_ref().ok_or("establish connection first")?;
@@ -205,28 +224,7 @@ impl Context {
                Request::Friends(info) => info.route(self)?,
                Request::UserPlan(info) => info.route(self)?,
                Request::DayPlan(info) => info.route(self)?,
-
-               Request::BestTalks {
-                   start_timestamp,
-                   end_timestamp,
-                   limit,
-                   all,
-               } => {
-                   let conn = self.conn.as_ref().ok_or("establish connection first")?;
-                   let start_timestamp = match start_timestamp {
-                       Timestamp::Date(d) => d.and_hms(0, 0, 0),
-                       Timestamp::DateTime(dt) => dt,
-                   };
-                   let end_timestamp = match end_timestamp {
-                       Timestamp::Date(d) => d.and_hms(23, 59, 59),
-                       Timestamp::DateTime(dt) => dt,
-                   };
-                   let limit: u32 = limit.validate()?;
-                   let all: bool = all.validate()? == 1;
-                   let best_talks = best_talks(&conn, start_timestamp, end_timestamp, limit, all)
-                       .chain_err(|| "during Request::BestTalks")?;
-                   Response::Ok(ResponseInfo::BestTalks(best_talks))
-               }
+               Request::BestTalks(info) => info.route(self)?,
 
                Request::MostPopularTalks {
                    start_timestamp,

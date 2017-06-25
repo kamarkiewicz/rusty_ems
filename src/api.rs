@@ -106,15 +106,7 @@ pub enum Request {
     Friends(FriendsInfo),
     UserPlan(UserPlanInfo),
     DayPlan(DayPlanInfo),
-
-    BestTalks {
-        #[serde(with = "timestamp_fmt")]
-        start_timestamp: Timestamp,
-        #[serde(with = "timestamp_fmt")]
-        end_timestamp: Timestamp,
-        limit: StrOr<u32>,
-        all: StrOr<u32>,
-    },
+    BestTalks(BestTalksInfo),
 
     MostPopularTalks {
         #[serde(with = "timestamp_fmt")]
@@ -264,6 +256,16 @@ pub struct UserPlanInfo {
 pub struct DayPlanInfo {
     #[serde(with = "date_fmt")]
     pub timestamp: Date,
+}
+
+#[derive(Debug, Deserialize, PartialEq)]
+pub struct BestTalksInfo {
+    #[serde(with = "timestamp_fmt")]
+    pub start_timestamp: Timestamp,
+    #[serde(with = "timestamp_fmt")]
+    pub end_timestamp: Timestamp,
+    pub limit: StrOr<u32>,
+    pub all: StrOr<u32>,
 }
 
 #[derive(Debug, Deserialize, PartialEq)]
