@@ -211,6 +211,15 @@ impl Route for MostPopularTalksInfo {
     }
 }
 
+impl Route for AttendedTalksInfo {
+    fn route(self, ctx: &mut Context) -> Result<Response> {
+        let conn = ctx.conn.as_ref().ok_or("establish connection first")?;
+        let talks = attended_talks(conn, self.login, self.password)
+            .chain_err(|| "during Request::AttendedTalks")?;
+        Ok(Response::Ok(ResponseInfo::AttendedTalks(talks)))
+    }
+}
+
 impl Route for FriendsEventsInfo {
     fn route(self, ctx: &mut Context) -> Result<Response> {
         let conn = ctx.conn.as_ref().ok_or("establish connection first")?;
@@ -244,13 +253,7 @@ impl Context {
                Request::DayPlan(info) => info.route(self)?,
                Request::BestTalks(info) => info.route(self)?,
                Request::MostPopularTalks(info) => info.route(self)?,
-
-               Request::AttendedTalks { login, password } => {
-                   let conn = self.conn.as_ref().ok_or("establish connection first")?;
-                   let talks = attended_talks(&conn, login, password)
-                       .chain_err(|| "during Request::AttendedTalks")?;
-                   Response::Ok(ResponseInfo::AttendedTalks(talks))
-               }
+               Request::AttendedTalks(info) => info.route(self)?,
 
                Request::AbandonedTalks {
                    login,

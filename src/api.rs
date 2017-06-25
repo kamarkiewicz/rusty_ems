@@ -108,8 +108,7 @@ pub enum Request {
     DayPlan(DayPlanInfo),
     BestTalks(BestTalksInfo),
     MostPopularTalks(MostPopularTalksInfo),
-
-    AttendedTalks { login: String, password: String },
+    AttendedTalks(AttendedTalksInfo),
 
     AbandonedTalks {
         login: String,
@@ -268,6 +267,12 @@ pub struct MostPopularTalksInfo {
     #[serde(with = "timestamp_fmt")]
     pub end_timestamp: Timestamp,
     pub limit: StrOr<u32>,
+}
+
+#[derive(Debug, Deserialize, PartialEq)]
+pub struct AttendedTalksInfo {
+    pub login: String,
+    pub password: String,
 }
 
 #[derive(Debug, Deserialize, PartialEq)]
