@@ -35,6 +35,28 @@ impl Route for OrganizerInfo {
     }
 }
 
+impl Route for EventInfo {
+    fn route(self, ctx: &mut Context) -> Result<Response> {
+        let conn = ctx.conn.as_ref().ok_or("establish connection first")?;
+        let start_timestamp = match self.start_timestamp {
+            Timestamp::Date(d) => d.and_hms(0, 0, 0),
+            Timestamp::DateTime(dt) => dt,
+        };
+        let end_timestamp = match self.end_timestamp {
+            Timestamp::Date(d) => d.and_hms(23, 59, 59),
+            Timestamp::DateTime(dt) => dt,
+        };
+        create_event(conn,
+                     self.login,
+                     self.password,
+                     self.eventname,
+                     start_timestamp,
+                     end_timestamp)
+                .chain_err(|| "during Request::Event")?;
+        Ok(Response::Ok(ResponseInfo::Empty))
+    }
+}
+
 impl Route for FriendsEventsInfo {
     fn route(self, ctx: &mut Context) -> Result<Response> {
         let conn = ctx.conn.as_ref().ok_or("establish connection first")?;
@@ -55,32 +77,7 @@ impl Context {
         Ok(match req {
                Request::Open(info) => info.route(self)?,
                Request::Organizer(info) => info.route(self)?,
-
-               Request::Event {
-                   login,
-                   password,
-                   eventname,
-                   start_timestamp,
-                   end_timestamp,
-               } => {
-                   let conn = self.conn.as_ref().ok_or("establish connection first")?;
-                   let start_timestamp = match start_timestamp {
-                       Timestamp::Date(d) => d.and_hms(0, 0, 0),
-                       Timestamp::DateTime(dt) => dt,
-                   };
-                   let end_timestamp = match end_timestamp {
-                       Timestamp::Date(d) => d.and_hms(23, 59, 59),
-                       Timestamp::DateTime(dt) => dt,
-                   };
-                   create_event(&conn,
-                                login,
-                                password,
-                                eventname,
-                                start_timestamp,
-                                end_timestamp)
-                           .chain_err(|| "during Request::Event")?;
-                   Response::Ok(ResponseInfo::Empty)
-               }
+               Request::Event(info) => info.route(self)?,
 
                Request::User {
                    login,

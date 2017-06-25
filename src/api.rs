@@ -95,16 +95,7 @@ impl<T> StrOr<T>
 pub enum Request {
     Open(OpenInfo),
     Organizer(OrganizerInfo),
-
-    Event {
-        login: String,
-        password: String,
-        eventname: String,
-        #[serde(with = "timestamp_fmt")]
-        start_timestamp: Timestamp,
-        #[serde(with = "timestamp_fmt")]
-        end_timestamp: Timestamp,
-    },
+    Event(EventInfo),
 
     User {
         login: String,
@@ -239,6 +230,17 @@ pub struct OrganizerInfo {
     pub secret: String,
     pub newlogin: String,
     pub newpassword: String,
+}
+
+#[derive(Debug, Deserialize, PartialEq)]
+pub struct EventInfo {
+    pub login: String,
+    pub password: String,
+    pub eventname: String,
+    #[serde(with = "timestamp_fmt")]
+    pub start_timestamp: Timestamp,
+    #[serde(with = "timestamp_fmt")]
+    pub end_timestamp: Timestamp,
 }
 
 #[derive(Debug, Deserialize, PartialEq)]
