@@ -11,8 +11,6 @@ pub trait Route
     where Self: Debug + Sized
 {
     fn route(self, _: &mut Context) -> Result<Response> {
-        use std::io::{Write, stderr};
-        writeln!(&mut stderr(), "Not implemented route: {:?}", self)?;
         Ok(Response::NotImplemented)
     }
 }
@@ -292,38 +290,36 @@ impl Route for FriendsEventsInfo {
 
 impl Route for RecommendedTalksInfo {}
 
-#[allow(unused_variables)]
-#[allow(unused_imports)]
 impl Context {
     pub fn new() -> Context {
         Context { conn: None }
     }
 
     pub fn resolve(&mut self, req: Request) -> Result<Response> {
-        Ok(match req {
-               Request::Open(info) => info.route(self)?,
-               Request::Organizer(info) => info.route(self)?,
-               Request::Event(info) => info.route(self)?,
-               Request::User(info) => info.route(self)?,
-               Request::Talk(info) => info.route(self)?,
-               Request::RegisterUserForEvent(info) => info.route(self)?,
-               Request::Attendance(info) => info.route(self)?,
-               Request::Evaluation(info) => info.route(self)?,
-               Request::Reject(info) => info.route(self)?,
-               Request::Proposal(info) => info.route(self)?,
-               Request::Friends(info) => info.route(self)?,
-               Request::UserPlan(info) => info.route(self)?,
-               Request::DayPlan(info) => info.route(self)?,
-               Request::BestTalks(info) => info.route(self)?,
-               Request::MostPopularTalks(info) => info.route(self)?,
-               Request::AttendedTalks(info) => info.route(self)?,
-               Request::AbandonedTalks(info) => info.route(self)?,
-               Request::RecentlyAddedTalks(info) => info.route(self)?,
-               Request::RejectedTalks(info) => info.route(self)?,
-               Request::Proposals(info) => info.route(self)?,
-               Request::FriendsTalks(info) => info.route(self)?,
-               Request::FriendsEvents(info) => info.route(self)?,
-               Request::RecommendedTalks(info) => info.route(self)?,
-           })
+        match req {
+            Request::Open(info) => info.route(self),
+            Request::Organizer(info) => info.route(self),
+            Request::Event(info) => info.route(self),
+            Request::User(info) => info.route(self),
+            Request::Talk(info) => info.route(self),
+            Request::RegisterUserForEvent(info) => info.route(self),
+            Request::Attendance(info) => info.route(self),
+            Request::Evaluation(info) => info.route(self),
+            Request::Reject(info) => info.route(self),
+            Request::Proposal(info) => info.route(self),
+            Request::Friends(info) => info.route(self),
+            Request::UserPlan(info) => info.route(self),
+            Request::DayPlan(info) => info.route(self),
+            Request::BestTalks(info) => info.route(self),
+            Request::MostPopularTalks(info) => info.route(self),
+            Request::AttendedTalks(info) => info.route(self),
+            Request::AbandonedTalks(info) => info.route(self),
+            Request::RecentlyAddedTalks(info) => info.route(self),
+            Request::RejectedTalks(info) => info.route(self),
+            Request::Proposals(info) => info.route(self),
+            Request::FriendsTalks(info) => info.route(self),
+            Request::FriendsEvents(info) => info.route(self),
+            Request::RecommendedTalks(info) => info.route(self),
+        }
     }
 }
