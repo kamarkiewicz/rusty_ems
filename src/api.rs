@@ -396,7 +396,7 @@ static SECRET: &str = "d8578edf8458ce06fbc5bb76a58c5ca4";
 pub fn read_call(data: &str) -> Result<Request> {
     let info: Request = serde_json::from_str(data)?;
     match &info {
-        &Request::Organizer(OrganizerInfo{ ref secret, .. }) => {
+        &Request::Organizer(OrganizerInfo { ref secret, .. }) => {
             if secret != SECRET {
                 bail!("invalid secret")
             }
