@@ -107,14 +107,7 @@ pub enum Request {
     UserPlan(UserPlanInfo),
     DayPlan(DayPlanInfo),
     BestTalks(BestTalksInfo),
-
-    MostPopularTalks {
-        #[serde(with = "timestamp_fmt")]
-        start_timestamp: Timestamp,
-        #[serde(with = "timestamp_fmt")]
-        end_timestamp: Timestamp,
-        limit: StrOr<u32>,
-    },
+    MostPopularTalks(MostPopularTalksInfo),
 
     AttendedTalks { login: String, password: String },
 
@@ -266,6 +259,15 @@ pub struct BestTalksInfo {
     pub end_timestamp: Timestamp,
     pub limit: StrOr<u32>,
     pub all: StrOr<u32>,
+}
+
+#[derive(Debug, Deserialize, PartialEq)]
+pub struct MostPopularTalksInfo {
+    #[serde(with = "timestamp_fmt")]
+    pub start_timestamp: Timestamp,
+    #[serde(with = "timestamp_fmt")]
+    pub end_timestamp: Timestamp,
+    pub limit: StrOr<u32>,
 }
 
 #[derive(Debug, Deserialize, PartialEq)]

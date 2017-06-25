@@ -193,6 +193,24 @@ impl Route for BestTalksInfo {
     }
 }
 
+impl Route for MostPopularTalksInfo {
+    fn route(self, ctx: &mut Context) -> Result<Response> {
+        let conn = ctx.conn.as_ref().ok_or("establish connection first")?;
+        let start_timestamp = match self.start_timestamp {
+            Timestamp::Date(d) => d.and_hms(0, 0, 0),
+            Timestamp::DateTime(dt) => dt,
+        };
+        let end_timestamp = match self.end_timestamp {
+            Timestamp::Date(d) => d.and_hms(23, 59, 59),
+            Timestamp::DateTime(dt) => dt,
+        };
+        let limit: u32 = self.limit.validate()?;
+        let most_popular_talks = most_popular_talks(conn, start_timestamp, end_timestamp, limit)
+            .chain_err(|| "during Request::MostPopularTalks")?;
+        Ok(Response::Ok(ResponseInfo::MostPopularTalks(most_popular_talks)))
+    }
+}
+
 impl Route for FriendsEventsInfo {
     fn route(self, ctx: &mut Context) -> Result<Response> {
         let conn = ctx.conn.as_ref().ok_or("establish connection first")?;
@@ -225,27 +243,7 @@ impl Context {
                Request::UserPlan(info) => info.route(self)?,
                Request::DayPlan(info) => info.route(self)?,
                Request::BestTalks(info) => info.route(self)?,
-
-               Request::MostPopularTalks {
-                   start_timestamp,
-                   end_timestamp,
-                   limit,
-               } => {
-                   let conn = self.conn.as_ref().ok_or("establish connection first")?;
-                   let start_timestamp = match start_timestamp {
-                       Timestamp::Date(d) => d.and_hms(0, 0, 0),
-                       Timestamp::DateTime(dt) => dt,
-                   };
-                   let end_timestamp = match end_timestamp {
-                       Timestamp::Date(d) => d.and_hms(23, 59, 59),
-                       Timestamp::DateTime(dt) => dt,
-                   };
-                   let limit: u32 = limit.validate()?;
-                   let most_popular_talks =
-                       most_popular_talks(&conn, start_timestamp, end_timestamp, limit)
-                           .chain_err(|| "during Request::MostPopularTalks")?;
-                   Response::Ok(ResponseInfo::MostPopularTalks(most_popular_talks))
-               }
+               Request::MostPopularTalks(info) => info.route(self)?,
 
                Request::AttendedTalks { login, password } => {
                    let conn = self.conn.as_ref().ok_or("establish connection first")?;
