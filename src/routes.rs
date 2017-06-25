@@ -110,6 +110,19 @@ impl Route for AttendanceInfo {
     }
 }
 
+impl Route for EvaluationInfo {
+    fn route(self, ctx: &mut Context) -> Result<Response> {
+        let conn = ctx.conn.as_ref().ok_or("establish connection first")?;
+        let rating = self.rating.validate()?;
+        if 0 > rating || rating > 10 {
+            bail!("rating must be in range 0-10")
+        }
+        evaluation(conn, self.login, self.password, self.talk, rating)
+            .chain_err(|| "during Request::Evaluation")?;
+        Ok(Response::Ok(ResponseInfo::Empty))
+    }
+}
+
 impl Route for FriendsEventsInfo {
     fn route(self, ctx: &mut Context) -> Result<Response> {
         let conn = ctx.conn.as_ref().ok_or("establish connection first")?;
@@ -135,22 +148,7 @@ impl Context {
                Request::Talk(info) => info.route(self)?,
                Request::RegisterUserForEvent(info) => info.route(self)?,
                Request::Attendance(info) => info.route(self)?,
-
-               Request::Evaluation {
-                   login,
-                   password,
-                   talk,
-                   rating,
-               } => {
-                   let conn = self.conn.as_ref().ok_or("establish connection first")?;
-                   let rating = rating.validate()?;
-                   if 0 > rating || rating > 10 {
-                       bail!("rating must be in range 0-10")
-                   }
-                   evaluation(&conn, login, password, talk, rating)
-                       .chain_err(|| "during Request::Evaluation")?;
-                   Response::Ok(ResponseInfo::Empty)
-               }
+               Request::Evaluation(info) => info.route(self)?,
 
                Request::Reject {
                    login,

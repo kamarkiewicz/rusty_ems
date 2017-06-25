@@ -100,13 +100,7 @@ pub enum Request {
     Talk(TalkInfo),
     RegisterUserForEvent(RegisterUserForEventInfo),
     Attendance(AttendanceInfo),
-
-    Evaluation {
-        login: String,
-        password: String,
-        talk: String,
-        rating: StrOr<i16>,
-    },
+    Evaluation(EvaluationInfo),
 
     Reject {
         login: String,
@@ -249,6 +243,14 @@ pub struct AttendanceInfo {
     pub login: String,
     pub password: String,
     pub talk: String,
+}
+
+#[derive(Debug, Deserialize, PartialEq)]
+pub struct EvaluationInfo {
+    pub login: String,
+    pub password: String,
+    pub talk: String,
+    pub rating: StrOr<i16>,
 }
 
 #[derive(Debug, Deserialize, PartialEq)]
