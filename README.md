@@ -1,5 +1,3 @@
-Autor: Kamil Markiewicz, numer indeksu 264407
-
 # rusty_ems
 
 Projekt na przedmiot Bazy danych @ II UWr 2017
@@ -15,7 +13,7 @@ Całość napisana i przetestowana przy użyciu języka **Rust 1.18** z gałęzi
 
 ## Model konceptualny
 
-![Diagram E-R](erd.svg)
+![Diagram E-R](docs/erd.svg)
 
 ## Dostosowanie środowiska
 
