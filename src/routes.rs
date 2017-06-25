@@ -6,6 +6,14 @@ pub struct Context {
     conn: Option<Connection>,
 }
 
+pub trait Route {
+    fn route(req: Request) -> Result<Response> {
+        use ::std::io::{Write, stderr};
+        writeln!(&mut stderr(), "Not implemented route: {:?}", req)?;
+        Ok(Response::NotImplemented)
+    }
+}
+
 #[allow(unused_variables)]
 #[allow(unused_imports)]
 impl Context {
