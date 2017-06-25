@@ -101,6 +101,15 @@ impl Route for RegisterUserForEventInfo {
     }
 }
 
+impl Route for AttendanceInfo {
+    fn route(self, ctx: &mut Context) -> Result<Response> {
+        let conn = ctx.conn.as_ref().ok_or("establish connection first")?;
+        attendance(conn, self.login, self.password, self.talk)
+            .chain_err(|| "during Request::Attendance")?;
+        Ok(Response::Ok(ResponseInfo::Empty))
+    }
+}
+
 impl Route for FriendsEventsInfo {
     fn route(self, ctx: &mut Context) -> Result<Response> {
         let conn = ctx.conn.as_ref().ok_or("establish connection first")?;
@@ -125,17 +134,7 @@ impl Context {
                Request::User(info) => info.route(self)?,
                Request::Talk(info) => info.route(self)?,
                Request::RegisterUserForEvent(info) => info.route(self)?,
-
-               Request::Attendance {
-                   login,
-                   password,
-                   talk,
-               } => {
-                   let conn = self.conn.as_ref().ok_or("establish connection first")?;
-                   attendance(&conn, login, password, talk)
-                       .chain_err(|| "during Request::Attendance")?;
-                   Response::Ok(ResponseInfo::Empty)
-               }
+               Request::Attendance(info) => info.route(self)?,
 
                Request::Evaluation {
                    login,
