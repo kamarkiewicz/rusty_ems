@@ -102,15 +102,7 @@ pub enum Request {
     Attendance(AttendanceInfo),
     Evaluation(EvaluationInfo),
     Reject(RejectInfo),
-
-    Proposal {
-        login: String,
-        password: String,
-        talk: String,
-        title: String,
-        #[serde(with = "datetime_fmt")]
-        start_timestamp: DateTime,
-    },
+    Proposal(ProposalInfo),
 
     Friends {
         login1: String,
@@ -253,6 +245,16 @@ pub struct RejectInfo {
     pub login: String,
     pub password: String,
     pub talk: String,
+}
+
+#[derive(Debug, Deserialize, PartialEq)]
+pub struct ProposalInfo {
+    pub login: String,
+    pub password: String,
+    pub talk: String,
+    pub title: String,
+    #[serde(with = "datetime_fmt")]
+    pub start_timestamp: DateTime,
 }
 
 #[derive(Debug, Deserialize, PartialEq)]
