@@ -25,6 +25,16 @@ impl Route for OpenInfo {
     }
 }
 
+impl Route for OrganizerInfo {
+    /// secret has been validated on Request creation
+    fn route(self, ctx: &mut Context) -> Result<Response> {
+        let conn = ctx.conn.as_ref().ok_or("establish connection first")?;
+        create_organizer_account(conn, self.newlogin, self.newpassword)
+            .chain_err(|| "during Request::Organizer")?;
+        Ok(Response::Ok(ResponseInfo::Empty))
+    }
+}
+
 impl Route for FriendsEventsInfo {
     fn route(self, ctx: &mut Context) -> Result<Response> {
         let conn = ctx.conn.as_ref().ok_or("establish connection first")?;
@@ -44,17 +54,7 @@ impl Context {
     pub fn resolve(&mut self, req: Request) -> Result<Response> {
         Ok(match req {
                Request::Open(info) => info.route(self)?,
-
-               Request::Organizer {
-                   newlogin,
-                   newpassword,
-                   .. // secret has been validated on Request creation
-               } => {
-                   let conn = self.conn.as_ref().ok_or("establish connection first")?;
-                    create_organizer_account(&conn, newlogin, newpassword)
-                        .chain_err(|| "during Request::Organizer")?;
-                    Response::Ok(ResponseInfo::Empty)
-               },
+               Request::Organizer(info) => info.route(self)?,
 
                Request::Event {
                    login,

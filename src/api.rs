@@ -94,12 +94,7 @@ impl<T> StrOr<T>
 #[serde(rename_all = "snake_case")]
 pub enum Request {
     Open(OpenInfo),
-
-    Organizer {
-        secret: String,
-        newlogin: String,
-        newpassword: String,
-    },
+    Organizer(OrganizerInfo),
 
     Event {
         login: String,
@@ -237,6 +232,13 @@ pub struct OpenInfo {
     pub baza: String,
     pub login: String,
     pub password: String,
+}
+
+#[derive(Debug, Deserialize, PartialEq)]
+pub struct OrganizerInfo {
+    pub secret: String,
+    pub newlogin: String,
+    pub newpassword: String,
 }
 
 #[derive(Debug, Deserialize, PartialEq)]
@@ -394,7 +396,7 @@ static SECRET: &str = "d8578edf8458ce06fbc5bb76a58c5ca4";
 pub fn read_call(data: &str) -> Result<Request> {
     let info: Request = serde_json::from_str(data)?;
     match &info {
-        &Request::Organizer { ref secret, .. } => {
+        &Request::Organizer(OrganizerInfo{ ref secret, .. }) => {
             if secret != SECRET {
                 bail!("invalid secret")
             }
