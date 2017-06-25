@@ -70,6 +70,28 @@ impl Route for UserInfo {
     }
 }
 
+impl Route for TalkInfo {
+    fn route(self, ctx: &mut Context) -> Result<Response> {
+        let conn = ctx.conn.as_ref().ok_or("establish connection first")?;
+        let initial_evaluation = self.initial_evaluation.validate()?;
+        if 0 > initial_evaluation || initial_evaluation > 10 {
+            bail!("initial_evaluation must be in range 0-10")
+        }
+        register_or_accept_talk(conn,
+                                self.login,
+                                self.password,
+                                self.speakerlogin,
+                                self.talk,
+                                self.title,
+                                self.start_timestamp,
+                                self.room,
+                                initial_evaluation,
+                                self.eventname)
+                .chain_err(|| "during Request::Talk")?;
+        Ok(Response::Ok(ResponseInfo::Empty))
+    }
+}
+
 impl Route for FriendsEventsInfo {
     fn route(self, ctx: &mut Context) -> Result<Response> {
         let conn = ctx.conn.as_ref().ok_or("establish connection first")?;
@@ -92,36 +114,7 @@ impl Context {
                Request::Organizer(info) => info.route(self)?,
                Request::Event(info) => info.route(self)?,
                Request::User(info) => info.route(self)?,
-
-               Request::Talk {
-                   login,
-                   password,
-                   speakerlogin,
-                   talk,
-                   title,
-                   start_timestamp,
-                   room,
-                   initial_evaluation,
-                   eventname,
-               } => {
-                   let conn = self.conn.as_ref().ok_or("establish connection first")?;
-                   let initial_evaluation = initial_evaluation.validate()?;
-                   if 0 > initial_evaluation || initial_evaluation > 10 {
-                       bail!("initial_evaluation must be in range 0-10")
-                   }
-                   register_or_accept_talk(&conn,
-                                           login,
-                                           password,
-                                           speakerlogin,
-                                           talk,
-                                           title,
-                                           start_timestamp,
-                                           room,
-                                           initial_evaluation,
-                                           eventname)
-                           .chain_err(|| "during Request::Talk")?;
-                   Response::Ok(ResponseInfo::Empty)
-               }
+               Request::Talk(info) => info.route(self)?,
 
                Request::RegisterUserForEvent {
                    login,

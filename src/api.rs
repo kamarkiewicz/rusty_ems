@@ -97,19 +97,7 @@ pub enum Request {
     Organizer(OrganizerInfo),
     Event(EventInfo),
     User(UserInfo),
-
-    Talk {
-        login: String,
-        password: String,
-        speakerlogin: String,
-        talk: String,
-        title: String,
-        #[serde(with = "datetime_fmt")]
-        start_timestamp: DateTime,
-        room: String,
-        initial_evaluation: StrOr<i16>,
-        eventname: String,
-    },
+    Talk(TalkInfo),
 
     RegisterUserForEvent {
         login: String,
@@ -243,6 +231,20 @@ pub struct UserInfo {
     pub password: String,
     pub newlogin: String,
     pub newpassword: String,
+}
+
+#[derive(Debug, Deserialize, PartialEq)]
+pub struct TalkInfo {
+    pub login: String,
+    pub password: String,
+    pub speakerlogin: String,
+    pub talk: String,
+    pub title: String,
+    #[serde(with = "datetime_fmt")]
+    pub start_timestamp: DateTime,
+    pub room: String,
+    pub initial_evaluation: StrOr<i16>,
+    pub eventname: String,
 }
 
 #[derive(Debug, Deserialize, PartialEq)]
