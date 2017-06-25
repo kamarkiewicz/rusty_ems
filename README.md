@@ -13,7 +13,7 @@ Całość napisana i przetestowana przy użyciu języka **Rust 1.18** z gałęzi
 
 ## Model konceptualny
 
-![Diagram E-R](docs/erd.svg)
+![Diagram E-R](https://cdn.rawgit.com/kamarkiewicz/rusty_ems/e0203e45/docs/erd.svg)
 
 ## Dostosowanie środowiska
 
