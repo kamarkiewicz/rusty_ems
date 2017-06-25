@@ -105,11 +105,7 @@ pub enum Request {
     Proposal(ProposalInfo),
     Friends(FriendsInfo),
     UserPlan(UserPlanInfo),
-
-    DayPlan {
-        #[serde(with = "date_fmt")]
-        timestamp: Date,
-    },
+    DayPlan(DayPlanInfo),
 
     BestTalks {
         #[serde(with = "timestamp_fmt")]
@@ -262,6 +258,12 @@ pub struct FriendsInfo {
 pub struct UserPlanInfo {
     pub login: String,
     pub limit: StrOr<u32>,
+}
+
+#[derive(Debug, Deserialize, PartialEq)]
+pub struct DayPlanInfo {
+    #[serde(with = "date_fmt")]
+    pub timestamp: Date,
 }
 
 #[derive(Debug, Deserialize, PartialEq)]
