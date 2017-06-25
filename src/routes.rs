@@ -6,11 +6,23 @@ pub struct Context {
     conn: Option<Connection>,
 }
 
-pub trait Route {
-    fn route(req: Request) -> Result<Response> {
-        use ::std::io::{Write, stderr};
-        writeln!(&mut stderr(), "Not implemented route: {:?}", req)?;
+use std::fmt::Debug;
+pub trait Route
+    where Self: Debug + Sized
+{
+    fn route(self, _: &mut Context) -> Result<Response> {
+        use std::io::{Write, stderr};
+        writeln!(&mut stderr(), "Not implemented route: {:?}", self)?;
         Ok(Response::NotImplemented)
+    }
+}
+
+impl Route for FriendsEventsInfo {
+    fn route(self, ctx: &mut Context) -> Result<Response> {
+        let conn = ctx.conn.as_ref().ok_or("establish connection first")?;
+        let talks = friends_events(conn, self.login, self.password, self.eventname)
+            .chain_err(|| "during Request::FriendsEvents")?;
+        Ok(Response::Ok(ResponseInfo::FriendsEvents(talks)))
     }
 }
 
@@ -297,16 +309,7 @@ impl Context {
                    Response::Ok(ResponseInfo::FriendsTalks(talks))
                },
 
-               Request::FriendsEvents {
-                   login,
-                   password,
-                   eventname
-               } => {
-                   let conn = self.conn.as_ref().ok_or("establish connection first")?;
-                   let talks = friends_events(&conn, login, password, eventname)
-                        .chain_err(|| "during Request::FriendsEvents")?;
-                   Response::Ok(ResponseInfo::FriendsEvents(talks))
-               },
+               Request::FriendsEvents(info) => info.route(self)?,
 
                Request::RecommendedTalks {
                    login,

@@ -223,11 +223,7 @@ pub enum Request {
         limit: StrOr<u32>,
     },
 
-    FriendsEvents {
-        login: String,
-        password: String,
-        eventname: String,
-    },
+    FriendsEvents(FriendsEventsInfo),
 
     RecommendedTalks {
         login: String,
@@ -238,6 +234,13 @@ pub enum Request {
         end_timestamp: Timestamp,
         limit: StrOr<u32>,
     },
+}
+
+#[derive(Debug, Deserialize, PartialEq)]
+pub struct FriendsEventsInfo {
+    pub login: String,
+    pub password: String,
+    pub eventname: String,
 }
 
 // ================================================
