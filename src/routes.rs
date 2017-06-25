@@ -123,6 +123,15 @@ impl Route for EvaluationInfo {
     }
 }
 
+impl Route for RejectInfo {
+    fn route(self, ctx: &mut Context) -> Result<Response> {
+        let conn = ctx.conn.as_ref().ok_or("establish connection first")?;
+        reject_spontaneous_talk(conn, self.login, self.password, self.talk)
+            .chain_err(|| "during Request::Reject")?;
+        Ok(Response::Ok(ResponseInfo::Empty))
+    }
+}
+
 impl Route for FriendsEventsInfo {
     fn route(self, ctx: &mut Context) -> Result<Response> {
         let conn = ctx.conn.as_ref().ok_or("establish connection first")?;
@@ -149,17 +158,7 @@ impl Context {
                Request::RegisterUserForEvent(info) => info.route(self)?,
                Request::Attendance(info) => info.route(self)?,
                Request::Evaluation(info) => info.route(self)?,
-
-               Request::Reject {
-                   login,
-                   password,
-                   talk,
-               } => {
-                   let conn = self.conn.as_ref().ok_or("establish connection first")?;
-                   reject_spontaneous_talk(&conn, login, password, talk)
-                       .chain_err(|| "during Request::Reject")?;
-                   Response::Ok(ResponseInfo::Empty)
-               }
+               Request::Reject(info) => info.route(self)?,
 
                Request::Proposal {
                    login,
