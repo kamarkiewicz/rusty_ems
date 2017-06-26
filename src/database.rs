@@ -663,11 +663,7 @@ pub fn rejected_talks(conn: &Connection,
                       password: String)
                       -> Result<Vec<RejectedTalk>> {
 
-    let (typ, person_id) =
-        authorize_person_as(conn, &login, Some(&password), PersonType::Organizer)
-            .map(|id| (PersonType::Organizer, id))
-            .or(authorize_person_as(conn, &login, Some(&password), PersonType::User)
-                    .map(|id| (PersonType::User, id)))?;
+    let (typ, person_id) = try_authorize_person(conn, login, password)?;
 
     let talks: Vec<_> = match typ {
             PersonType::Organizer => {
@@ -887,4 +883,14 @@ fn authorize_person_as(conn: &Connection,
         .map(|row| row.get("id"))
         .next()
         .ok_or_else(|| "Requested person not found".into())
+}
+
+fn try_authorize_person(conn: &Connection,
+                        login: String,
+                        password: String)
+                        -> Result<(PersonType, i32)> {
+    use self::PersonType::*;
+    authorize_person_as(conn, &login, Some(&password), Organizer)
+        .map(|id| (Organizer, id))
+        .or_else(|_| authorize_person_as(conn, &login, Some(&password), User).map(|id| (User, id)))
 }
