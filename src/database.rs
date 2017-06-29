@@ -40,9 +40,8 @@ pub fn create_organizer_account(conn: &Connection,
         INSERT INTO persons (login, password, is_organizer)
         VALUES ($1, $2, TRUE)"#;
     conn.execute(query, &[&newlogin, &newpassword])
-        .chain_err(|| "Unable to insert organizer person")?;
-
-    Ok(())
+        .map(|_| ())
+        .chain_err(|| "Unable to insert organizer person")
 }
 
 /// (*O) event <login> <password> <eventname> <start_timestamp> <end_timestamp>
@@ -62,9 +61,8 @@ pub fn create_event(conn: &Connection,
         INSERT INTO events (eventname, start_timestamp, end_timestamp)
         VALUES ($1, $2, $3)"#;
     conn.execute(query, &[&eventname, &start_timestamp, &end_timestamp])
-        .chain_err(|| "Unable to insert event")?;
-
-    Ok(())
+        .map(|_| ())
+        .chain_err(|| "Unable to insert event")
 }
 
 /// (*O) user <login> <password> <newlogin> <newpassword>
@@ -87,9 +85,8 @@ pub fn create_user(conn: &Connection,
         INSERT INTO persons (login, password, is_organizer)
         VALUES ($1, $2, FALSE)"#;
     conn.execute(query, &[&newlogin, &newpassword])
-        .chain_err(|| "Unable to insert User person")?;
-
-    Ok(())
+        .map(|_| ())
+        .chain_err(|| "Unable to insert User person")
 }
 
 #[derive(Debug, ToSql, FromSql)]
@@ -173,9 +170,8 @@ pub fn register_or_accept_talk(conn: &Connection,
         INSERT INTO person_rated_talk (person_id, talk_id, rating)
         VALUES ($1, $2, $3)"#;
     conn.execute(query, &[&person_id, &talk_id, &initial_evaluation])
-        .chain_err(|| "Unable to evaluate the talk")?;
-
-    Ok(())
+        .map(|_| ())
+        .chain_err(|| "Unable to evaluate the talk")
 }
 
 /// (*U) register_user_for_event <login> <password> <eventname>
@@ -204,9 +200,8 @@ pub fn register_user_for_event(conn: &Connection,
         INSERT INTO person_registered_for_event (person_id, event_id)
         VALUES ($1, $2)"#;
     conn.execute(query, &[&person_id, &event_id])
-        .chain_err(|| "Person can't be registered for event")?;
-
-    Ok(())
+        .map(|_| ())
+        .chain_err(|| "Person can't be registered for event")
 }
 
 /// (*U) attendance <login> <password> <talk>
@@ -233,9 +228,8 @@ pub fn attendance(conn: &Connection, login: String, password: String, talk: Stri
         INSERT INTO person_attended_for_talk (person_id, talk_id)
         VALUES ($1, $2)"#;
     conn.execute(query, &[&person_id, &talk_id])
-        .chain_err(|| "Unable to mark attendance of User for the talk")?;
-
-    Ok(())
+        .map(|_| ())
+        .chain_err(|| "Unable to mark attendance of User for the talk")
 }
 
 /// (*U) evaluation <login> <password> <talk> <rating>
@@ -265,9 +259,8 @@ pub fn evaluation(conn: &Connection,
         INSERT INTO person_rated_talk (person_id, talk_id, rating)
         VALUES ($1, $2, $3)"#;
     conn.execute(query, &[&person_id, &talk_id, &rating])
-        .chain_err(|| "Unable to evaluate the talk")?;
-
-    Ok(())
+        .map(|_| ())
+        .chain_err(|| "Unable to evaluate the talk")
 }
 
 /// (O) reject <login> <password> <talk>
@@ -318,9 +311,8 @@ pub fn propose_spontaneous_talk(conn: &Connection,
                    &TalkStatus::Proposed,
                    &title,
                    &start_timestamp])
-        .chain_err(|| "Unable to insert a proposal")?;
-
-    Ok(())
+        .map(|_| ())
+        .chain_err(|| "Unable to insert a proposal")
 }
 
 /// (U) friends <login1> <password> <login2>
@@ -340,9 +332,8 @@ pub fn make_friends(conn: &Connection,
         INSERT INTO person_knows_person (person1_id, person2_id)
         VALUES ($1, $2)"#;
     conn.execute(query, &[&person1_id, &person2_id])
-        .chain_err(|| "These users are already friends?")?;
-
-    Ok(())
+        .map(|_| ())
+        .chain_err(|| "These users are already friends?")
 }
 
 /// (*N) user_plan <login> <limit>
