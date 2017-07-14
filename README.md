@@ -1,5 +1,7 @@
 # rusty_ems
 
+[![Build Status](https://travis-ci.org/kamarkiewicz/rusty_ems.svg?branch=master)](https://travis-ci.org/kamarkiewicz/rusty_ems)
+
 Projekt na przedmiot Bazy danych @ II UWr 2017
 
 Całość napisana i przetestowana przy użyciu języka **Rust 1.18** z gałęzi **stable**.

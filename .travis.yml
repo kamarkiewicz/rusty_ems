@@ -1,0 +1,21 @@
+language: rust
+sudo: false
+dist: trusty
+matrix:
+    fast_finish: true
+    include:
+        - rust: nightly
+        - rust: beta
+        - rust: stable
+        - rust: 1.18.0
+
+cache:
+    apt: true
+    directories:
+        - target/debug/deps
+        - target/debug/build
+
+script:
+    - cargo build
+    - cargo test
+
