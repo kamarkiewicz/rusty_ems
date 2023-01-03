@@ -1,11 +1,11 @@
 [package]
 name = "rusty_ems"
-version = "0.95.0"
+version = "0.95.1"
 authors = ["Kamil Markiewicz <k.a.markiewicz@gmail.com>"]
 
 [dependencies]
 chrono = { version = "0.3", features = ["serde"] }
-error-chain = "0.10.0"
+error-chain = "0.12.4"
 postgres = { version = "0.14", features = ["with-chrono"] }
 postgres-derive = "0.3"
 serde = "1.0.8"
